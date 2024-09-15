@@ -1,0 +1,81 @@
+.trending-sidebar {
+  position: fixed;
+  top: 60px; /* Asegura que quede justo debajo de la barra superior */
+  left: 0;
+  width: 200px;
+  background-color: #212121;
+  padding: 10px;
+  height: calc(100vh - 60px); /* Ajusta la altura para que llegue hasta el final de la pantalla */
+  overflow-y: auto;
+  z-index: 999; /* Asegura que la barra lateral esté detrás de la barra superior */
+}
+
+.trending-content {
+  margin-top: 0; /* Ajusta el margen superior a 0 para acercar los videos al encabezado */
+  padding: 0 20px; /* Añadir padding lateral para dar espacio a los contenidos */
+  width: 100%;
+}
+
+/* Ajuste del contenedor principal para que no solape con la barra lateral */
+.trending-page {
+  display: flex;
+  flex-wrap: wrap; /* Flex-wrap para mejorar la responsividad */
+  margin-left: 220px; /* Aumentamos el espacio para la barra lateral */
+  padding-top: 10px;
+  justify-content: center; /* Centramos los videos */
+}
+
+/* Ajustes para los videos trending */
+.video-list {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap; /* Permite que los videos se organicen en filas */
+  justify-content: center; /* Alinea los videos al centro */
+  gap: 20px; /* Añadimos un gap para dar espacio entre los videos */
+}
+
+.video-item {
+  margin: 20px;
+  background-color: #1e1e1e;
+  padding: 15px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 320px; /* Hace que los videos sean más grandes */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Añadir sombra para un efecto de profundidad */
+  transition: transform 0.3s ease; /* Animación en hover */
+}
+
+.video-item:hover {
+  transform: scale(1.05); /* Aumentar el tamaño en hover */
+}
+
+.video-item h3 {
+  color: #ffffff;
+  text-align: center; /* Centra el título del video */
+  font-size: 18px; /* Aumenta el tamaño del texto */
+  margin-top: 10px;
+}
+
+.video-item img {
+  width: 100%;
+  border-radius: 10px;
+  max-height: 180px; /* Ajusta la altura máxima de las imágenes */
+}
+
+/* Quitar la línea azul debajo de los títulos de los videos */
+.video-item a {
+  text-decoration: none; /* Eliminar el subrayado */
+  color: #ffffff; /* Ajustar el color del texto */
+}
+
+.video-item a:visited {
+  color: #ffffff; /* Asegúrate de que el color no cambie después de visitar el enlace */
+}
+
+.video-item a:hover {
+  color: #ff5c5c; /* Agrega un efecto hover si lo deseas */
+  text-decoration: none; /* Mantén sin subrayado incluso en hover */
+}

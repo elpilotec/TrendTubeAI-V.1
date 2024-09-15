@@ -1,0 +1,62 @@
+/* Estilos para la lista de comentarios */
+.comments-container {
+  padding: 20px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.comments-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.comments-list {
+  list-style: none;
+  padding: 0;
+}
+
+.comment-item {
+  display: flex;
+  flex-direction: column;
+  padding: 15px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.comment-author {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.comment-author-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #ccc;
+  border-radius: 50%;
+  margin-right: 10px;
+  /* Puedes añadir una imagen aquí en lugar de un fondo gris si tienes la imagen del autor */
+}
+
+.comment-text {
+  font-size: 1rem;
+  color: #333;
+}
+
+.comment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.comment-likes {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+  

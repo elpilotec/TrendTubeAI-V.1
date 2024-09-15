@@ -1,0 +1,99 @@
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ff5c5c;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 15px; /* Reduce el tamaño del padding para hacer la barra más compacta */
+  height: 62px; /* Ajusta la altura total de la barra si es necesario */
+  box-shadow: none;
+  border-bottom: none;
+}
+
+/* Asegúrate de que el contenido no se superponga */
+.trending-page {
+  margin-top: 80px; /* De nuevo, ajusta según el tamaño de la barra superior */
+}
+
+/* Ajustar la barra lateral para que se una a la parte superior */
+.trending-sidebar {
+  position: fixed;
+  top: 60px; /* Alinea justo debajo de la barra superior */
+  left: 0;
+  width: 200px;
+  background-color: #212121;
+  padding: 10px;
+  height: calc(100vh - 60px); /* Ajustar la altura menos la barra superior */
+  overflow-y: auto;
+  z-index: 999;
+  border-right: none;
+}
+
+/* Contenido principal para que no se superponga a la barra lateral */
+.page-content {
+  margin-left: 220px; /* Espacio para la barra lateral */
+  margin-top: 48px; /* Espacio para la barra superior */
+  padding: 20px;
+}
+
+/* Estilo para las categorías en la barra lateral */
+.trending-category {
+  display: block;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  background-color: #323232;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.trending-category.active {
+  background-color: #ff5c5c;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.trending-category:hover {
+  background-color: #ff7b7b;
+}
+
+/* Estilo para los videos trending */
+.video-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.video-item {
+  margin-bottom: 20px;
+  background-color: #1e1e1e;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.video-item h3 {
+  color: #ffffff;
+  margin-left: 15px;
+  font-size: 18px;
+}
+
+.video-item img {
+  width: 150px;
+  border-radius: 10px;
+}
+
+/* Ajustar el eslogan */
+.slogan {
+  color: #ff5c5c;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-top: 20px;
+}
+
