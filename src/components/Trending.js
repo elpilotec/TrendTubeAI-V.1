@@ -1,30 +1,27 @@
+// Trending.js
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Asegúrate de tener este import
+import { Link } from 'react-router-dom';
 import { fetchTrendingVideos } from '../services/YouTubeServices';
 import '../styles/Trending.css';
 import '../styles/RegionSelector.css';
-const categories = {
-  10: 'Música',
-  17: 'Deportes',
-  20: 'Juegos',
-  22: 'Blogs y Personas',
-  23: 'Comedia',
-  24: 'Entretenimiento',
-  25: 'Noticias y Política',
-  26: 'Educación',
-  28: 'Ciencia y Tecnología',
-};
+import CategorySidebar from './CategorySidebar'; // Importamos el nuevo componente
 
 const regions = {
   US: 'Estados Unidos',
   ES: 'España',
+  DE: 'Alemania',
+  JP: 'Japón',
+  RU: 'Rusia',
   DO: 'República Dominicana',
+  MX: 'México',
+  VE: 'Venezuela',
+  CO: 'Colombia',
 };
 
 const Trending = () => {
   const [trendingVideos, setTrendingVideos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('US'); // Estado para la región seleccionada
+  const [selectedRegion, setSelectedRegion] = useState('US');
 
   useEffect(() => {
     const getTrendingVideos = async () => {
@@ -57,24 +54,8 @@ const Trending = () => {
         </select>
       </div>
 
-      {/* Barra de categorías vertical */}
-      <div className="trending-sidebar">
-        <button
-          onClick={() => handleCategoryChange('all')}
-          className={`trending-category ${!selectedCategory ? 'active' : ''}`}
-        >
-          Todos
-        </button>
-        {Object.keys(categories).map((categoryId) => (
-          <button
-            key={categoryId}
-            onClick={() => handleCategoryChange(categoryId)}
-            className={`trending-category ${selectedCategory === categoryId ? 'active' : ''}`}
-          >
-            {categories[categoryId]}
-          </button>
-        ))}
-      </div>
+      {/* Reutilizamos el componente CategorySidebar */}
+      <CategorySidebar selectedCategory={selectedCategory} handleCategoryChange={handleCategoryChange} />
 
       {/* Listado de videos */}
       <div className="trending-content">
@@ -83,7 +64,6 @@ const Trending = () => {
           {trendingVideos.length > 0 ? (
             trendingVideos.map((video) => (
               <li key={video.videoId} className="video-item">
-                {/* Añadir `Link` alrededor del título o imagen para navegación interna */}
                 <Link to={`/video/${video.videoId}`}>
                   <img src={video.thumbnail} alt={video.title} className="video-thumbnail" />
                   <h3 className="video-title">{video.title}</h3>

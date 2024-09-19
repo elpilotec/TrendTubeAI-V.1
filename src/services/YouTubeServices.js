@@ -3,12 +3,12 @@ import axios from 'axios';
 // Obtener la clave API de YouTube desde las variables de entorno
 const apiKey = process.env.REACT_APP_YOUTUBE_API_KEY;
 
-// Función para obtener los detalles del video
+// Función para obtener los detalles del video, incluyendo el número de visitas
 export const fetchVideoDetails = async (videoId) => {
   try {
     const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
       params: {
-        part: 'snippet',
+        part: 'snippet,statistics', // Añadimos 'statistics' para obtener el número de visitas
         id: videoId,
         key: apiKey,
       },
@@ -16,9 +16,12 @@ export const fetchVideoDetails = async (videoId) => {
 
     if (response.data && response.data.items.length > 0) {
       const videoData = response.data.items[0].snippet;
+      const statistics = response.data.items[0].statistics; // Obtener estadísticas (número de visitas)
+
       return {
         title: videoData.title,
         thumbnail: videoData.thumbnails.medium.url,
+        viewCount: statistics.viewCount, // Número de visitas del video
       };
     } else {
       console.error('No se encontraron detalles del video.');
@@ -43,22 +46,18 @@ export const fetchComments = async (videoId) => {
     });
 
     if (response.data && response.data.items.length > 0) {
-      // Ordenar los comentarios por cantidad de likes y limitar a 12
-      const sortedComments = response.data.items
+      // Obtener los primeros 12 comentarios sin ordenar ni mostrar likes
+      const comments = response.data.items
         .map((item) => {
           const comment = item.snippet.topLevelComment.snippet;
-          const likeCount = comment.likeCount || 0; // Verifica si likeCount es un número válido, de lo contrario usa 0
-
           return {
             text: comment.textDisplay,
-            likeCount: likeCount,
             author: comment.authorDisplayName,
           };
         })
-        .sort((a, b) => b.likeCount - a.likeCount) // Ordenar los comentarios por likes, de mayor a menor
-        .slice(0, 12); // Limitar a los 12 mejores comentarios
+        .slice(0, 12); // Limitar a los primeros 12 comentarios
 
-      return sortedComments;
+      return comments;
     } else {
       console.error('No se encontraron comentarios.');
       return [];
@@ -73,7 +72,7 @@ export const fetchComments = async (videoId) => {
 export const fetchTrendingVideos = async (categoryId = '', regionCode = 'US') => { // Aquí agregamos la región por defecto
   try {
     const params = {
-      part: 'snippet,contentDetails',
+      part: 'snippet,contentDetails,statistics', // Añadimos 'statistics' para obtener las visitas
       chart: 'mostPopular',
       regionCode: regionCode, // Usamos la región seleccionada
       maxResults: 10,
@@ -93,6 +92,7 @@ export const fetchTrendingVideos = async (categoryId = '', regionCode = 'US') =>
         thumbnail: item.snippet.thumbnails.medium.url,
         videoId: item.id,
         categoryId: item.snippet.categoryId,
+        viewCount: item.statistics.viewCount, // Añadir el número de visitas en el objeto de retorno
       }));
     } else {
       console.error('No se encontraron videos en tendencia.');

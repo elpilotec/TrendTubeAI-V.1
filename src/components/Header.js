@@ -8,16 +8,16 @@ import logo from '../assets/logo.png'; // Importar el logo
 const Header = ({ darkMode, toggleDarkMode }) => {
   return (
     <AppBar position="static" style={{ backgroundColor: '#ff6666' }}> {/* Color rojo claro */}
-      <Toolbar>
+      <Toolbar style={{ display: 'flex', alignItems: 'center' }}> {/* Asegurar alineación centrada */}
         {/* Logo y nombre de la app */}
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}>
           <img 
             src={logo} 
             alt="Logo" 
-            style={{ width: '60px', height: '60px', marginRight: '15px' }} // Ajustar tamaño del logo
+            style={{ width: '90px', height: '90px', marginRight: '-17px', marginTop: '-10px' }} // Ajuste tamaño y posición del logo
           />
-          <Typography variant="h6" style={{ fontSize: '24px' }}> {/* Ajuste del tamaño del texto */}
-            InnoTubeAI
+          <Typography variant="h6" style={{ fontSize: '28px', marginTop: '-5px' }}> {/* Ajustar margen del texto */}
+            TrendTubeAI
           </Typography>
         </Link>
 
@@ -47,4 +47,3 @@ const Header = ({ darkMode, toggleDarkMode }) => {
 };
 
 export default Header;
-

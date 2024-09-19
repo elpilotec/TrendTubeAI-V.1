@@ -102,6 +102,12 @@
   margin-top: 30px;
 }
 
+.video-views {
+  font-size: 16px;
+  color: #ff5c5c;
+  margin-top: 5px;
+}
+
 .ideas-list {
   list-style-type: none;
   padding: 0;
@@ -123,4 +129,14 @@
 
 .idea-item p strong {
   color: #ff6b6b;
+}
+.video-info-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.video-views {
+  margin: 0;
+  color: red;
 }

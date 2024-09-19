@@ -28,7 +28,8 @@ function App() {
         <div className="page-content">
           {/* Eslogan */}
           <h2 className="slogan">
-            ¡Enciende tu creatividad con ideas de video impulsadas por IA!
+            ¡Tu Inspiración para Crear Videos Virales Con (IA)
+             Comienza Aquí!
           </h2>
 
           {/* Barra de búsqueda */}
