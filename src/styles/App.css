@@ -1,3 +1,9 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .header-container {
   position: fixed;
   top: 0;
@@ -7,43 +13,47 @@
   z-index: 1000;
   display: flex;
   justify-content: space-between;
-  padding: 5px 15px; /* Reduce el tamaño del padding para hacer la barra más compacta */
-  height: 62px; /* Ajusta la altura total de la barra si es necesario */
-  box-shadow: none;
-  border-bottom: none;
+  padding: 5px 15px;
+  height: 62px;
 }
 
-/* Asegúrate de que el contenido no se superponga */
-.trending-page {
-  margin-top: 80px; /* De nuevo, ajusta según el tamaño de la barra superior */
-}
-
-/* Ajustar la barra lateral para que se una a la parte superior */
-.trending-sidebar {
-  position: fixed;
-  top: 60px; /* Alinea justo debajo de la barra superior */
-  left: 0;
-  width: 200px;
-  background-color: #212121;
-  padding: 10px;
-  height: calc(100vh - 60px); /* Ajustar la altura menos la barra superior */
-  overflow-y: auto;
-  z-index: 999;
-  border-right: none;
-}
-
-/* Contenido principal para que no se superponga a la barra lateral */
-.page-content {
-  margin-left: 220px; /* Espacio para la barra lateral */
-  margin-top: 48px; /* Espacio para la barra superior */
+.main-content {
+  margin-top: 62px;
   padding: 20px;
+  flex-grow: 1;
 }
 
-/* Estilo para las categorías en la barra lateral */
-.trending-category {
-  display: block;
-  padding: 10px 20px;
-  margin-bottom: 10px;
+.slogan {
+  color: #ff5c5c;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.category-bar-container {
+  position: relative;
+  background-color: #212121;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.category-scroll-container {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 10px 40px;
+}
+
+.category-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.category-button {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  margin-right: 8px;
   background-color: #323232;
   color: #ffffff;
   border: none;
@@ -53,47 +63,47 @@
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.trending-category.active {
+.category-button.active {
   background-color: #ff5c5c;
   color: #ffffff;
   font-weight: bold;
 }
 
-.trending-category:hover {
+.category-button:hover {
   background-color: #ff7b7b;
 }
 
-/* Estilo para los videos trending */
-.video-list {
-  list-style-type: none;
-  padding: 0;
-}
-
-.video-item {
-  margin-bottom: 20px;
-  background-color: #1e1e1e;
-  padding: 10px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-}
-
-.video-item h3 {
+.scroll-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(33, 33, 33, 0.8);
   color: #ffffff;
-  margin-left: 15px;
-  font-size: 18px;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 1;
 }
 
-.video-item img {
-  width: 150px;
-  border-radius: 10px;
+.scroll-button.left {
+  left: 0;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
 }
 
-/* Ajustar el eslogan */
-.slogan {
-  color: #ff5c5c;
-  font-size: 1.5rem;
-  text-align: center;
-  margin-top: 20px;
+.scroll-button.right {
+  right: 0;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
 }
 
+@media (max-width: 768px) {
+  .main-content {
+    padding: 10px;
+  }
+
+  .category-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

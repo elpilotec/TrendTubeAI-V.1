@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
 import { generateIdeas } from '../services/ChatGPTServices';
-import CategorySidebar from './CategorySidebar';
 import '../styles/VideoDetails.css';
 
 export default function VideoDetails() {
@@ -24,11 +23,17 @@ export default function VideoDetails() {
 
   useEffect(() => {
     const loadVideoDetails = async () => {
-      const details = await fetchVideoDetails(videoId);
-      setVideoDetails(details);
-      const fetchedComments = await fetchComments(videoId);
-      setComments(fetchedComments.slice(0, 10));
-      setLoading(false);
+      try {
+        const details = await fetchVideoDetails(videoId);
+        setVideoDetails(details);
+        const fetchedComments = await fetchComments(videoId);
+        setComments(fetchedComments.slice(0, 10));
+      } catch (error) {
+        console.error("Error loading video details:", error);
+        setErrorMessage("Error al cargar los detalles del video.");
+      } finally {
+        setLoading(false);
+      }
     };
     loadVideoDetails();
   }, [videoId]);
@@ -36,30 +41,47 @@ export default function VideoDetails() {
   const handleGenerateIdeas = async () => {
     setLoadingIdeas(true);
     setErrorMessage("");
-    const result = await generateIdeas(videoDetails);
-    setLoadingIdeas(false);
-
-    if (result.success) {
-      console.log('Ideas generadas:', result.ideas);
-      setIdeas(result.ideas);
-    } else {
-      setErrorMessage(result.error);
-      console.error(result.error);
+    setIdeas([]);
+    try {
+      const result = await generateIdeas(videoDetails);
+      console.log("Result from generateIdeas:", result);
+      if (result.success) {
+        setIdeas(result.ideas);
+      } else {
+        throw new Error(result.error || "Error desconocido al generar ideas.");
+      }
+    } catch (error) {
+      console.error("Error generating ideas:", error);
+      setErrorMessage(error.message || "Error al generar ideas. Por favor, intenta de nuevo.");
+    } finally {
+      setLoadingIdeas(false);
     }
   };
 
+  const renderIdea = (idea, index) => {
+    // Remove hashtags from the script
+    const scriptWithoutHashtags = idea.script.replace(/#\w+/g, '').trim();
+    
+    return (
+      <div key={index} className="idea-item">
+        <h4>{`Opción # ${index + 1}`}</h4>
+        <p><strong>Título:</strong> {idea.title}</p>
+        <p><strong>Guión:</strong> {scriptWithoutHashtags}</p>
+        <p><strong>Hashtags:</strong> {idea.hashtags.join(' ')}</p>
+      </div>
+    );
+  };
+
   if (loading) {
-    return <div>Cargando detalles del video y comentarios...</div>;
+    return <div className="loading">Cargando detalles del video y comentarios...</div>;
   }
 
   return (
     <div className="video-details-page">
-      <CategorySidebar selectedCategory="" handleCategoryChange={() => {}} />
+      <button className="back-button" onClick={() => navigate(-1)}>
+        Atrás
+      </button>
       <div className="video-details-container">
-        <button className="back-button" onClick={() => navigate(-1)}>
-          Atrás
-        </button>
-        
         {videoDetails && (
           <>
             <div className="video-header">
@@ -81,7 +103,11 @@ export default function VideoDetails() {
             </div>
 
             <div className="button-container">
-              <button className="generate-ideas-button" onClick={handleGenerateIdeas} disabled={loadingIdeas}>
+              <button 
+                className="generate-ideas-button" 
+                onClick={handleGenerateIdeas} 
+                disabled={loadingIdeas}
+              >
                 {loadingIdeas ? 'Generando Ideas...' : 'Generar Ideas Para Video'}
               </button>
             </div>
@@ -90,15 +116,8 @@ export default function VideoDetails() {
 
             {ideas.length > 0 && (
               <div className="ideas-container">
-                <h3>Ideas Generadas para Video </h3>
-                {ideas.map((idea, index) => (
-                  <div key={index} className="idea-item">
-                    <h4>{`Opción # ${index + 1}`}</h4>
-                    <p><strong>Título:</strong> {idea.title || 'Sin título disponible'}</p>
-                    <p><strong>Tips:</strong> {idea.script || 'Sin guión disponible'}</p>
-                    <p><strong>Hashtags:</strong> {idea.hashtags && idea.hashtags.length > 0 ? idea.hashtags.join(' ') : 'Sin hashtags disponibles'}</p>
-                  </div>
-                ))}
+                <h3>Ideas Generadas para Video</h3>
+                {ideas.map(renderIdea)}
               </div>
             )}
 

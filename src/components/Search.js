@@ -21,13 +21,15 @@ const Search = () => {
     if (videoId) {
       navigate(`/video/${videoId}`);
     } else {
-      alert('Por favor, ingresa una URL válida de YouTube.');
+      alert('ingresa una URL válida de YouTube.');
     }
   };
 
   return (
     <div className="search-container">
-      
+      <h2 style={{ color: '#FF6666', marginBottom: '20px', fontWeight: 'bold', textAlign: 'center', fontSize: '1.5rem', lineHeight: '1.2' }}>
+        ¡Tu Inspiración para Crear Videos Virales Con (IA) Comienza Aquí!
+      </h2>
 
       <div className="search-bar">
         <input

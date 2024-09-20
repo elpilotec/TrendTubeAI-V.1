@@ -16,7 +16,7 @@ const Header = ({ darkMode, toggleDarkMode }) => {
             alt="Logo" 
             style={{ width: '90px', height: '90px', marginRight: '-17px', marginTop: '-10px' }} // Ajuste tamaño y posición del logo
           />
-          <Typography variant="h6" style={{ fontSize: '28px', marginTop: '-5px' }}> {/* Ajustar margen del texto */}
+          <Typography variant="h6" style={{ fontSize: '26px', marginTop: '-5px' }}> {/* Ajustar margen del texto */}
             TrendTubeAI
           </Typography>
         </Link>
@@ -39,7 +39,7 @@ const Header = ({ darkMode, toggleDarkMode }) => {
           inputProps={{ 'aria-label': 'toggle dark mode' }}
         />
         <Typography variant="body2">
-          {darkMode ? 'Modo Oscuro' : 'Modo Claro'}
+          {darkMode ? 'ON' : 'OFF'}
         </Typography>
       </Toolbar>
     </AppBar>

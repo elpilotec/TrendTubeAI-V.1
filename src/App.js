@@ -1,48 +1,42 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { lightTheme, darkTheme } from './theme';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import Header from './components/Header';
 import Search from './components/Search';
 import Trending from './components/Trending';
 import VideoDetails from './components/VideoDetails';
-import './styles/App.css'; // Asegúrate de importar correctamente los estilos
+import './styles/App.css';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
 
+  const theme = createTheme({
+    palette: {
+      mode: darkMode ? 'dark' : 'light',
+    },
+  });
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
-    <Router>
-      <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
-        <CssBaseline />
-        {/* Barra superior fija */}
-        <header className="header-container">
-          <Header darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} />
-        </header>
-        
-        {/* Barra lateral y contenido principal */}
-        <div className="trending-sidebar">
-          <Trending />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <div className="app-container">
+          <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+          <main className="main-content">
+            <Search />
+            <Routes>
+              <Route path="/" element={<Trending />} />
+              <Route path="/video/:videoId" element={<VideoDetails />} />
+            </Routes>
+          </main>
         </div>
-
-        <div className="page-content">
-          {/* Eslogan */}
-          <h2 className="slogan">
-            ¡Tu Inspiración para Crear Videos Virales Con (IA)
-             Comienza Aquí!
-          </h2>
-
-          {/* Barra de búsqueda */}
-          <Search />
-
-          {/* Rutas de la aplicación */}
-          <Routes>
-            <Route path="/" element={<Trending />} />
-            <Route path="/video/:videoId" element={<VideoDetails />} />
-          </Routes>
-        </div>
-      </ThemeProvider>
-    </Router>
+      </Router>
+    </ThemeProvider>
   );
 }
 

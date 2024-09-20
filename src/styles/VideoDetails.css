@@ -140,3 +140,24 @@
   margin: 0;
   color: red;
 }
+.back-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  background-color: #bd773e;
+  color: rgb(97, 23, 85);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.back-button:hover {
+  background-color: #ff4d4d;
+}
+
+.video-details-page {
+  position: relative;
+  padding-top: 50px; /* Add some top padding to account for the back button */
+}
