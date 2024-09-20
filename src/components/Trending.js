@@ -78,6 +78,8 @@ export default function Trending() {
         </div>
       </div>
 
+      <h3 className="results-title">Resultados</h3>
+
       <div className="trending-content">
         <ul className="video-list">
           {trendingVideos.length > 0 ? (
