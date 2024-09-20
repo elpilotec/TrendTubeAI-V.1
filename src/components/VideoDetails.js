@@ -95,7 +95,7 @@ export default function VideoDetails() {
                   <div key={index} className="idea-item">
                     <h4>{`Opción # ${index + 1}`}</h4>
                     <p><strong>Título:</strong> {idea.title || 'Sin título disponible'}</p>
-                    <p><strong>Guión:</strong> {idea.script || 'Sin guión disponible'}</p>
+                    <p><strong>Tips:</strong> {idea.script || 'Sin guión disponible'}</p>
                     <p><strong>Hashtags:</strong> {idea.hashtags && idea.hashtags.length > 0 ? idea.hashtags.join(' ') : 'Sin hashtags disponibles'}</p>
                   </div>
                 ))}
