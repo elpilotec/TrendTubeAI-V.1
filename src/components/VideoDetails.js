@@ -59,26 +59,30 @@ export default function VideoDetails() {
   };
 
   const renderIdea = (idea, index) => {
-    // Remove hashtags from the script
-    const scriptWithoutHashtags = idea.script.replace(/#\w+/g, '').trim();
-    
     return (
       <div key={index} className="idea-item">
         <h4>{`Opción # ${index + 1}`}</h4>
         <p><strong>Título:</strong> {idea.title}</p>
-        <p><strong>Guión:</strong> {scriptWithoutHashtags}</p>
+        <div className="script-container">
+          <strong>Guión:</strong>
+          <ul>
+            {idea.script.split('\n').map((point, i) => (
+              <li key={i}>{point}</li>
+            ))}
+          </ul>
+        </div>
         <p><strong>Hashtags:</strong> {idea.hashtags.join(' ')}</p>
       </div>
     );
   };
 
   if (loading) {
-    return <div className="loading">Cargando detalles del video y comentarios...</div>;
+    return <div className="loading" aria-live="polite">Cargando detalles del video y comentarios...</div>;
   }
 
   return (
     <div className="video-details-page">
-      <button className="back-button" onClick={() => navigate(-1)}>
+      <button className="back-button" onClick={() => navigate(-1)} aria-label="Volver a la página anterior">
         Atrás
       </button>
       <div className="video-details-container">
@@ -86,7 +90,7 @@ export default function VideoDetails() {
           <>
             <div className="video-header">
               <div className="video-thumbnail-container">
-                <img src={videoDetails.thumbnail} alt={videoDetails.title} className="video-thumbnail" />
+                <img src={videoDetails.thumbnail} alt={`Miniatura de ${videoDetails.title}`} className="video-thumbnail" />
               </div>
               <div className="video-info-container">
                 <p className="video-views">Vistas: {formatViewCount(videoDetails.viewCount)}</p>
@@ -107,12 +111,13 @@ export default function VideoDetails() {
                 className="generate-ideas-button" 
                 onClick={handleGenerateIdeas} 
                 disabled={loadingIdeas}
+                aria-busy={loadingIdeas}
               >
                 {loadingIdeas ? 'Generando Ideas...' : 'Generar Ideas Para Video'}
               </button>
             </div>
 
-            {errorMessage && <p className="error-message">{errorMessage}</p>}
+            {errorMessage && <p className="error-message" role="alert">{errorMessage}</p>}
 
             {ideas.length > 0 && (
               <div className="ideas-container">
@@ -126,7 +131,11 @@ export default function VideoDetails() {
               <ul className="comments-list">
                 {comments.map((comment, index) => (
                   <li key={index} className="comment-item">
-                    <p><span className="comment-number">{index + 1}.</span> {comment.author}: {comment.text}</p>
+                    <p>
+                      <span className="comment-number">{index + 1}.</span>
+                      <span className="comment-author">{comment.author}:</span>
+                      <span className="comment-text">{comment.text}</span>
+                    </p>
                   </li>
                 ))}
               </ul>
