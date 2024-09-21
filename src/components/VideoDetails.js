@@ -82,7 +82,7 @@ export default function VideoDetails() {
     setErrorMessage("");
     setIdea(null);
     try {
-      const result = await generarIdeaCorta(videoDetails);
+      const result = await generarIdeaCorta(videoDetails, comments);
       if (result.success) {
         setIdea(result.idea);
       } else {
@@ -167,10 +167,7 @@ export default function VideoDetails() {
       <Container maxWidth="md" sx={{ py: 3 }}>
         {videoDetails && (
           <>
-            <Typography variant="h5" gutterBottom align="center">
-              {videoDetails.title}
-            </Typography>
-            <ThumbnailContainer mb={3}>
+            <ThumbnailContainer mb={2}>
               <img src={videoDetails.thumbnail} alt={videoDetails.title} style={{ width: '100%', maxHeight: 450, objectFit: 'cover' }} />
               <ViewButton
                 variant="text"
@@ -185,6 +182,9 @@ export default function VideoDetails() {
                 </Typography>
               </Box>
             </ThumbnailContainer>
+            <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2 }}>
+              {videoDetails.title}
+            </Typography>
             <Box display="flex" justifyContent="center" mb={2}>
               <Button
                 variant="contained"

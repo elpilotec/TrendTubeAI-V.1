@@ -1,48 +1,81 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Switch, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Typography, Switch, Box } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
-import logo from '../assets/logo.png'; // Importar el logo
+import logo from '../assets/logo.png';
+
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  backgroundColor: '#ff6666',
+  boxShadow: 'none',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+}));
+
+const StyledToolbar = styled(Toolbar)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '0 16px',
+  height: '64px',
+});
+
+const LogoContainer = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  textDecoration: 'none',
+  color: 'inherit',
+});
+
+const Logo = styled('img')({
+  height: '90px',
+  marginRight: '8px',
+});
+
+const AppName = styled(Typography)({
+  fontSize: '1.5rem',
+  fontWeight: 'bold',
+  letterSpacing: '0.5px',
+  marginLeft: '-25px',
+});
+
+const SettingsContainer = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+});
+
+const StyledSwitch = styled(Switch)(({ theme }) => ({
+  '& .MuiSwitch-switchBase.Mui-checked': {
+    color: theme.palette.common.white,
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    },
+  },
+  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+    backgroundColor: theme.palette.common.white,
+  },
+}));
 
 const Header = ({ darkMode, toggleDarkMode }) => {
   return (
-    <AppBar position="static" style={{ backgroundColor: '#ff6666' }}> {/* Color rojo claro */}
-      <Toolbar style={{ display: 'flex', alignItems: 'center' }}> {/* Asegurar alineación centrada */}
-        {/* Logo y nombre de la app */}
-        <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}>
-          <img 
-            src={logo} 
-            alt="Logo" 
-            style={{ width: '90px', height: '90px', marginRight: '-17px', marginTop: '-10px' }} // Ajuste tamaño y posición del logo
-          />
-          <Typography variant="h6" style={{ fontSize: '26px', marginTop: '-5px' }}> {/* Ajustar margen del texto */}
+    <StyledAppBar position="static">
+      <StyledToolbar>
+        <LogoContainer component={Link} to="/">
+          <Logo src={logo} alt="TrendTubeAI Logo" />
+          <AppName variant="h6">
             TrendTubeAI
+          </AppName>
+        </LogoContainer>
+        <SettingsContainer>
+          <StyledSwitch
+            checked={darkMode}
+            onChange={toggleDarkMode}
+            inputProps={{ 'aria-label': 'toggle dark mode' }}
+          />
+          <Typography variant="body2" sx={{ marginLeft: 1, fontWeight: 'bold' }}>
+            {darkMode ? 'ON' : 'OFF'}
           </Typography>
-        </Link>
-
-        <div style={{ flexGrow: 1 }} />
-
-        {/* Modo oscuro */}
-        <IconButton
-          edge="end"
-          color="inherit"
-          onClick={toggleDarkMode}
-          aria-label="toggle dark mode"
-        >
-          {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-        </IconButton>
-        <Switch
-          checked={darkMode}
-          onChange={toggleDarkMode}
-          color="default"
-          inputProps={{ 'aria-label': 'toggle dark mode' }}
-        />
-        <Typography variant="body2">
-          {darkMode ? 'ON' : 'OFF'}
-        </Typography>
-      </Toolbar>
-    </AppBar>
+        </SettingsContainer>
+      </StyledToolbar>
+    </StyledAppBar>
   );
 };
 

@@ -2,8 +2,17 @@ import axios from 'axios';
 
 const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
 
-const generatePrompt = (videoTitle) => `
-Genera una idea completa y detallada para un video corto viral de menos de 1 minuto basado en el siguiente título: "${videoTitle}".
+const generatePrompt = (videoDetails, topComments) => `
+Genera una idea completa y detallada para un video corto viral de menos de 1 minuto basado en el siguiente video de YouTube:
+
+Título: "${videoDetails.title}"
+Descripción: "${videoDetails.description}"
+Duración: ${videoDetails.duration} segundos
+Vistas: ${videoDetails.viewCount}
+
+Comentarios más relevantes:
+${topComments.map(comment => `- "${comment.text}"`).join('\n')}
+
 La idea DEBE incluir:
 1. Un título atractivo y descriptivo (máximo 60 caracteres).
 2. Un guión detallado (entre 100 y 150 palabras) que incluya:
@@ -19,7 +28,7 @@ Guión: [Guión detallado]
 Hashtags: [#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5]
 Sugerencias de Producción: [Lista de 2-3 sugerencias específicas para la producción]
 
-Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral para plataformas de videos cortos.
+Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral para plataformas de videos cortos. Incorpora elementos del video original y los comentarios más relevantes para crear una idea impactante y atractiva.
 `;
 
 const parseResponse = (rawContent) => {
@@ -36,7 +45,7 @@ const parseResponse = (rawContent) => {
   };
 };
 
-export const generarIdeaCorta = async (videoDetails) => {
+export const generarIdeaCorta = async (videoDetails, topComments) => {
   if (!apiKey) {
     throw new Error('API Key de OpenAI no encontrada. Verifica tu archivo .env');
   }
@@ -46,7 +55,7 @@ export const generarIdeaCorta = async (videoDetails) => {
       model: "gpt-3.5-turbo",
       messages: [
         { role: 'system', content: 'Eres un experto en creación de contenido viral para videos cortos y estrategias de marketing digital.' },
-        { role: 'user', content: generatePrompt(videoDetails.title) }
+        { role: 'user', content: generatePrompt(videoDetails, topComments) }
       ],
       max_tokens: 2000,
       temperature: 0.7,
