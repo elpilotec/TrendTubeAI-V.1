@@ -51,6 +51,13 @@ export default function Trending() {
     setSelectedCategory(event.target.value);
   };
 
+  const formatViewCount = (count) => {
+    if (count >= 1000000000) return (count / 1000000000).toFixed(1) + 'B';
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count.toString();
+  };
+
   return (
     <div className="trending-container">
       <h2 className="trending-title">Descubre los Videos en Tendencia</h2>
@@ -86,7 +93,12 @@ export default function Trending() {
             trendingVideos.map((video) => (
               <li key={video.videoId} className="video-item">
                 <Link to={`/video/${video.videoId}`}>
-                  <img src={video.thumbnail} alt={video.title} className="video-thumbnail" />
+                  <div className="thumbnail-container">
+                    <img src={video.thumbnail} alt={video.title} className="video-thumbnail" />
+                    <div className="view-count">
+                      {formatViewCount(video.viewCount)} vistas
+                    </div>
+                  </div>
                   <h3 className="video-title">{video.title}</h3>
                 </Link>
               </li>

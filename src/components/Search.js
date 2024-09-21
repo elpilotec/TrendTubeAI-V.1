@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Search.css';
+import { TextField, Button, Box, Typography } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
 export default function Search() {
   const [query, setQuery] = useState('');
@@ -32,28 +33,46 @@ export default function Search() {
   };
 
   return (
-    <div className="search-container">
-      <h1 className="search-title">
-        ¡Tu Inspiración para Crear Videos Virales Con (IA) Comienza Aquí!
-      </h1>
+    <Box sx={{ maxWidth: 600, margin: 'auto', mt: 3, px: 2 }}>
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          mb: 3, 
+          color: '#ff6666', 
+          textAlign: 'center',
+          fontWeight: 'bold',
+          fontSize: '1.8rem',
+          lineHeight: 1.2,
+          textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+          margin: '0 auto 24px'
+        }}
+      >
+        Crea Videos Virales Con IA
+      </Typography>
 
-      <form onSubmit={handleSearch} className="search-form">
-        <label htmlFor="video-url" className="sr-only">URL del video de YouTube</label>
-        <input
-          id="video-url"
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ingresa la URL del video de YouTube"
-          className="search-input"
-          aria-describedby="url-error"
-        />
-        <button type="submit" className="search-button">
-          Buscar
-        </button>
+      <form onSubmit={handleSearch}>
+        <Box display="flex" alignItems="center">
+          <TextField
+            fullWidth
+            variant="outlined"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Ingresa la URL del video de YouTube"
+            InputProps={{
+              startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+            }}
+            sx={{ mr: 1 }}
+          />
+          <Button type="submit" variant="contained" color="primary">
+            Buscar
+          </Button>
+        </Box>
       </form>
-
-      {error && <p id="url-error" className="error-message" role="alert">{error}</p>}
-    </div>
+      {error && (
+        <Typography color="error" sx={{ mt: 2 }} align="center">
+          {error}
+        </Typography>
+      )}
+    </Box>
   );
 }

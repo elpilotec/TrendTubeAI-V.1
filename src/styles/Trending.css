@@ -111,3 +111,17 @@
   color: #ff6666;
   font-size: 1.2em;
 }
+.thumbnail-container {
+  position: relative;
+}
+
+.view-count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
