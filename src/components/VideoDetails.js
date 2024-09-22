@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Button, Paper, Box, List, ListItem, ListItemText, CircularProgress, Snackbar, Container, AppBar, Toolbar, IconButton } from '@mui/material';
+import { 
+  Typography, Button, Paper, Box, List, ListItem, ListItemText, CircularProgress, 
+  Snackbar, Container, AppBar, Toolbar, IconButton
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
@@ -9,12 +12,12 @@ import { generarIdeaCorta } from '../services/ChatGPTServices';
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
   marginTop: theme.spacing(3),
-  backgroundColor: theme.palette.grey[900],
-  color: theme.palette.common.white,
+  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+  color: theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black,
 }));
 
 const HighlightedText = styled(Typography)(({ theme }) => ({
-  color: theme.palette.error.light,
+  color: theme.palette.error.main,
   fontWeight: 'bold',
 }));
 
@@ -41,9 +44,10 @@ const SquareBackButton = styled(IconButton)(({ theme }) => ({
   width: '48px',
   height: '48px',
   borderRadius: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  backgroundColor: theme.palette.error.main,
+  color: theme.palette.common.white,
   '&:hover': {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: theme.palette.error.dark,
   },
 }));
 
@@ -157,9 +161,9 @@ export default function VideoDetails() {
 
   return (
     <>
-      <AppBar position="static" color="primary" elevation={0}>
+      <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar style={{ minHeight: '48px', padding: 0 }}>
-          <SquareBackButton color="inherit" onClick={() => navigate(-1)} aria-label="back">
+          <SquareBackButton onClick={() => navigate(-1)} aria-label="back">
             <ArrowBackIcon />
           </SquareBackButton>
         </Toolbar>
