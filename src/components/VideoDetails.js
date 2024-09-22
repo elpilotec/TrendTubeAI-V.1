@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Typography, Button, Paper, Box, List, ListItem, ListItemText, CircularProgress, 
-  Snackbar, Container, AppBar, Toolbar, IconButton
+  Snackbar, Container, AppBar, Toolbar, IconButton, useTheme
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
 import { generarIdeaCorta } from '../services/ChatGPTServices';
 
@@ -17,7 +18,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }));
 
 const HighlightedText = styled(Typography)(({ theme }) => ({
-  color: theme.palette.error.main,
+  color: theme.palette.mode === 'dark' ? theme.palette.error.light : theme.palette.error.main,
   fontWeight: 'bold',
 }));
 
@@ -34,7 +35,7 @@ const ViewButton = styled(Button)(({ theme }) => ({
   top: 8,
   right: 8,
   backgroundColor: 'rgba(0,0,0,0.6)',
-  color: theme.palette.error.light,
+  color: theme.palette.mode === 'dark' ? theme.palette.error.light : theme.palette.error.main,
   '&:hover': {
     backgroundColor: 'rgba(0,0,0,0.8)',
   },
@@ -44,16 +45,34 @@ const SquareBackButton = styled(IconButton)(({ theme }) => ({
   width: '48px',
   height: '48px',
   borderRadius: 0,
+  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.error.main,
+  color: theme.palette.common.white,
+  '&:hover': {
+    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.error.dark,
+  },
+}));
+
+const CopyButton = styled(IconButton)(({ theme }) => ({
+  marginLeft: theme.spacing(1),
+  padding: theme.spacing(0.5),
+}));
+
+const GenerateIdeaButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.error.main,
   color: theme.palette.common.white,
   '&:hover': {
     backgroundColor: theme.palette.error.dark,
+  },
+  '&.Mui-disabled': {
+    backgroundColor: theme.palette.action.disabledBackground,
+    color: theme.palette.action.disabled,
   },
 }));
 
 export default function VideoDetails() {
   const { videoId } = useParams();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [videoDetails, setVideoDetails] = useState(null);
   const [comments, setComments] = useState([]);
   const [idea, setIdea] = useState(null);
@@ -61,6 +80,7 @@ export default function VideoDetails() {
   const [loadingIdea, setLoadingIdea] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const loadVideoDetails = useCallback(async () => {
     try {
@@ -101,33 +121,64 @@ export default function VideoDetails() {
     }
   };
 
+  const copyToClipboard = (text, section) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setSnackbarMessage(`${section} copiado al portapapeles`);
+      setSnackbarOpen(true);
+    }).catch(err => {
+      console.error('Error al copiar: ', err);
+      setSnackbarMessage('Error al copiar al portapapeles');
+      setSnackbarOpen(true);
+    });
+  };
+
   const renderIdea = (idea) => {
     if (!idea) return null;
     return (
       <StyledPaper elevation={3}>
-        <Typography variant="h6" gutterBottom>
-          {idea.titulo || 'Título no disponible'}
-        </Typography>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Typography variant="h6">
+            {idea.titulo || 'Título no disponible'}
+          </Typography>
+          <CopyButton onClick={() => copyToClipboard(idea.titulo, 'Título')} aria-label="Copiar título">
+            <ContentCopyIcon fontSize="small" />
+          </CopyButton>
+        </Box>
         <Box mb={2}>
-          <HighlightedText variant="subtitle1" gutterBottom>
-            Guión:
-          </HighlightedText>
+          <Box display="flex" alignItems="center">
+            <HighlightedText variant="subtitle1" gutterBottom>
+              Guión:
+            </HighlightedText>
+            <CopyButton onClick={() => copyToClipboard(idea.guion, 'Guión')} aria-label="Copiar guión">
+              <ContentCopyIcon fontSize="small" />
+            </CopyButton>
+          </Box>
           <Typography variant="body2">
             {idea.guion || 'Guión no disponible'}
           </Typography>
         </Box>
         <Box mb={2}>
-          <HighlightedText variant="subtitle1" gutterBottom>
-            Hashtags:
-          </HighlightedText>
+          <Box display="flex" alignItems="center">
+            <HighlightedText variant="subtitle1" gutterBottom>
+              Hashtags:
+            </HighlightedText>
+            <CopyButton onClick={() => copyToClipboard(idea.hashtags.join(' '), 'Hashtags')} aria-label="Copiar hashtags">
+              <ContentCopyIcon fontSize="small" />
+            </CopyButton>
+          </Box>
           <Typography variant="body2">
             {idea.hashtags && idea.hashtags.length > 0 ? idea.hashtags.join(' ') : 'No hay hashtags disponibles'}
           </Typography>
         </Box>
         <Box>
-          <HighlightedText variant="subtitle1" gutterBottom>
-            Sugerencias de Producción:
-          </HighlightedText>
+          <Box display="flex" alignItems="center">
+            <HighlightedText variant="subtitle1" gutterBottom>
+              Sugerencias de Producción:
+            </HighlightedText>
+            <CopyButton onClick={() => copyToClipboard(idea.sugerenciasProduccion.join('\n'), 'Sugerencias de Producción')} aria-label="Copiar sugerencias de producción">
+              <ContentCopyIcon fontSize="small" />
+            </CopyButton>
+          </Box>
           {idea.sugerenciasProduccion && idea.sugerenciasProduccion.length > 0 ? (
             <List>
               {idea.sugerenciasProduccion.map((sugerencia, index) => (
@@ -160,7 +211,7 @@ export default function VideoDetails() {
   }
 
   return (
-    <>
+    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh' }}>
       <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar style={{ minHeight: '48px', padding: 0 }}>
           <SquareBackButton onClick={() => navigate(-1)} aria-label="back">
@@ -186,22 +237,21 @@ export default function VideoDetails() {
                 </Typography>
               </Box>
             </ThumbnailContainer>
-            <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2 }}>
+            <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2, color: theme.palette.text.primary }}>
               {videoDetails.title}
             </Typography>
             <Box display="flex" justifyContent="center" mb={2}>
-              <Button
+              <GenerateIdeaButton
                 variant="contained"
-                color="secondary"
                 onClick={handleGenerateIdea}
                 disabled={loadingIdea}
                 sx={{ maxWidth: '300px', width: '100%' }}
               >
                 {loadingIdea ? 'Generando Idea...' : 'Generar Idea Para Video'}
-              </Button>
+              </GenerateIdeaButton>
             </Box>
             {idea && renderIdea(idea)}
-            <Typography variant="h6" gutterBottom sx={{ mt: 4 }} align="center">
+            <Typography variant="h6" gutterBottom sx={{ mt: 4, color: theme.palette.text.primary }} align="center">
               Mejores Comentarios
             </Typography>
             <List>
@@ -210,6 +260,8 @@ export default function VideoDetails() {
                   <ListItemText
                     primary={comment.author}
                     secondary={comment.text}
+                    primaryTypographyProps={{ color: theme.palette.text.primary }}
+                    secondaryTypographyProps={{ color: theme.palette.text.secondary }}
                   />
                 </ListItem>
               ))}
@@ -218,11 +270,11 @@ export default function VideoDetails() {
         )}
         <Snackbar
           open={snackbarOpen}
-          autoHideDuration={6000}
+          autoHideDuration={3000}
           onClose={() => setSnackbarOpen(false)}
-          message={errorMessage}
+          message={snackbarMessage || errorMessage}
         />
       </Container>
-    </>
+    </Box>
   );
 }

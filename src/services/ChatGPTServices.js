@@ -15,27 +15,32 @@ ${topComments.map(comment => `- "${comment.text}"`).join('\n')}
 
 La idea DEBE incluir:
 1. Un título atractivo y descriptivo (máximo 60 caracteres).
-2. Un guión detallado (entre 100 y 150 palabras) que incluya:
-   - Un gancho inicial impactante (5 segundos)
+2. Un guión narrado detallado (entre 150 y 200 palabras) que se pueda leer directamente para crear el video. El guión debe incluir:
+   - Un gancho inicial impactante (5-10 segundos)
    - Desarrollo del contenido principal (40-45 segundos)
    - Un cierre fuerte o llamada a la acción (5-10 segundos)
+   - Instrucciones de entonación y pausas entre corchetes, por ejemplo: [pausa dramática], [tono emocionado], [susurro], etc.
 3. 5 hashtags relevantes y populares.
 4. 2-3 sugerencias específicas para la producción del video (ángulos de cámara, efectos, música, etc.).
 
 Formato requerido para la idea:
 Título: [Título de la idea]
-Guión: [Guión detallado]
+Guión Narrado:
+[Guión detallado con instrucciones de narración]
 Hashtags: [#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5]
-Sugerencias de Producción: [Lista de 2-3 sugerencias específicas para la producción]
+Sugerencias de Producción:
+- [Sugerencia 1]
+- [Sugerencia 2]
+- [Sugerencia 3]
 
-Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral para plataformas de videos cortos. Incorpora elementos del video original y los comentarios más relevantes para crear una idea impactante y atractiva.
+Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral para plataformas de videos cortos. El guión narrado debe ser fluido, atractivo y fácil de leer en voz alta. Incorpora elementos del video original y los comentarios más relevantes para crear una idea impactante y atractiva.
 `;
 
 const parseResponse = (rawContent) => {
   const titulo = rawContent.match(/Título:\s*(.+)/)?.[1]?.trim();
-  const guion = rawContent.match(/Guión:\s*(.+?)(?=\n\w+:)/s)?.[1]?.trim();
+  const guion = rawContent.match(/Guión Narrado:\s*(.+?)(?=\nHashtags:)/s)?.[1]?.trim();
   const hashtags = rawContent.match(/Hashtags:\s*(.+)/)?.[1]?.split(/\s+/) || [];
-  const sugerenciasProduccion = rawContent.match(/Sugerencias de Producción:\s*(.+)/s)?.[1]?.trim().split('\n').map(item => item.trim());
+  const sugerenciasProduccion = rawContent.match(/Sugerencias de Producción:\s*(.+)/s)?.[1]?.trim().split('\n').map(item => item.trim().replace(/^-\s*/, ''));
 
   return {
     titulo,
@@ -54,7 +59,7 @@ export const generarIdeaCorta = async (videoDetails, topComments) => {
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: "gpt-3.5-turbo",
       messages: [
-        { role: 'system', content: 'Eres un experto en creación de contenido viral para videos cortos y estrategias de marketing digital.' },
+        { role: 'system', content: 'Eres un experto en creación de contenido viral para videos cortos y estrategias de marketing digital, con habilidades especiales en escritura de guiones narrados.' },
         { role: 'user', content: generatePrompt(videoDetails, topComments) }
       ],
       max_tokens: 2000,

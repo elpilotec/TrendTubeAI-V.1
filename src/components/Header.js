@@ -70,7 +70,7 @@ const Header = ({ darkMode, toggleDarkMode }) => {
             onChange={toggleDarkMode}
             inputProps={{ 'aria-label': 'toggle dark mode' }}
           />
-          <Typography variant="body2" sx={{ marginLeft: 1, fontWeight: 'bold' }}>
+          <Typography variant="body2" sx={{ marginLeft: -1, fontWeight: 'bold' }}>
             {darkMode ? 'ON' : 'OFF'}
           </Typography>
         </SettingsContainer>
