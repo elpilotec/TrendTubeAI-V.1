@@ -81,7 +81,7 @@ export default function Search() {
           <Typography 
             variant="h4" 
             sx={{ 
-              color: theme.palette.error.main,
+              color: theme.palette.mode === 'dark' ? '#ff6b6b' : '#ff4d4d',
               fontWeight: 'bold',
               fontSize: isMobile ? '1.5rem' : '2rem',
               textAlign: 'center',
