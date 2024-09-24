@@ -2,13 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Typography, Button, Paper, Box, List, ListItem, ListItemText, CircularProgress, 
-  Snackbar, Container, AppBar, Toolbar, IconButton, useTheme
+  Snackbar, Container, AppBar, Toolbar, IconButton, useTheme, Dialog, DialogContent, DialogActions
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
 import { generarIdeaCorta } from '../services/ChatGPTServices';
+import AdSense from './AdSense';
+
+// Define the ad slot as a constant
+const AD_SLOT = "9690922331"; // Replace with your actual ad slot
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -81,6 +85,7 @@ export default function VideoDetails() {
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [showAd, setShowAd] = useState(false);
 
   const loadVideoDetails = useCallback(async () => {
     try {
@@ -101,10 +106,15 @@ export default function VideoDetails() {
     loadVideoDetails();
   }, [loadVideoDetails]);
 
-  const handleGenerateIdea = async () => {
+  const handleGenerateIdea = () => {
     setLoadingIdea(true);
     setErrorMessage("");
     setIdea(null);
+    setShowAd(true);
+  };
+
+  const handleCloseAd = async () => {
+    setShowAd(false);
     try {
       const result = await generarIdeaCorta(videoDetails, comments);
       if (result.success) {
@@ -274,6 +284,19 @@ export default function VideoDetails() {
           onClose={() => setSnackbarOpen(false)}
           message={snackbarMessage || errorMessage}
         />
+        <Dialog open={showAd} onClose={handleCloseAd} maxWidth="md" fullWidth>
+          <DialogContent>
+            <AdSense
+              adSlot={AD_SLOT}
+              style={{ display: 'block', textAlign: 'center' }}
+              format="auto"
+              responsive={true}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseAd}>Cerrar</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );
