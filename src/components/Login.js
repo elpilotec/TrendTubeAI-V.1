@@ -13,6 +13,8 @@ export default function Login({ onLogin }) {
     onSuccess: async (tokenResponse) => {
       setIsLoading(true);
       try {
+        console.log('Redirect URI being used:', window.location.href); // Captura el redirect_uri exacto
+
         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
@@ -39,7 +41,7 @@ export default function Login({ onLogin }) {
       console.error('Login Failed:', errorResponse);
       setError('Login failed. Please try again.');
     },
-    flow: 'implicit', // Opción para flujo implícito
+    flow: 'implicit',  // Opción para flujo implícito
     redirectUri: 'https://www.trendtubeai.com',  // Especificamos el redirectUri para que coincida con Google Cloud Console
   });
 
