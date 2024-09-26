@@ -39,7 +39,8 @@ export default function Login({ onLogin }) {
       console.error('Login Failed:', errorResponse);
       setError('Login failed. Please try again.');
     },
-    flow: 'implicit',
+    flow: 'implicit', // Opción para flujo implícito
+    redirectUri: 'https://www.trendtubeai.com',  // Especificamos el redirectUri para que coincida con Google Cloud Console
   });
 
   const handleClose = () => {
