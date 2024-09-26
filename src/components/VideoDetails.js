@@ -86,6 +86,7 @@ export default function VideoDetails() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showAd, setShowAd] = useState(false);
+  const [isAdSenseVerified, setIsAdSenseVerified] = useState(false);
 
   const loadVideoDetails = useCallback(async () => {
     try {
@@ -106,15 +107,30 @@ export default function VideoDetails() {
     loadVideoDetails();
   }, [loadVideoDetails]);
 
+  useEffect(() => {
+    // Simula la verificación de AdSense
+    // En un caso real, esto debería ser una llamada a tu backend
+    const checkAdSenseVerification = async () => {
+      // Simula una llamada API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setIsAdSenseVerified(true);
+    };
+
+    checkAdSenseVerification();
+  }, []);
+
   const handleGenerateIdea = () => {
     setLoadingIdea(true);
     setErrorMessage("");
     setIdea(null);
-    setShowAd(true);
+    if (isAdSenseVerified) {
+      setShowAd(true);
+    } else {
+      handleGenerateIdeaWithoutAd();
+    }
   };
 
-  const handleCloseAd = async () => {
-    setShowAd(false);
+  const handleGenerateIdeaWithoutAd = async () => {
     try {
       const result = await generarIdeaCorta(videoDetails, comments);
       if (result.success) {
@@ -129,6 +145,11 @@ export default function VideoDetails() {
     } finally {
       setLoadingIdea(false);
     }
+  };
+
+  const handleCloseAd = () => {
+    setShowAd(false);
+    handleGenerateIdeaWithoutAd();
   };
 
   const copyToClipboard = (text, section) => {
@@ -284,19 +305,21 @@ export default function VideoDetails() {
           onClose={() => setSnackbarOpen(false)}
           message={snackbarMessage || errorMessage}
         />
-        <Dialog open={showAd} onClose={handleCloseAd} maxWidth="md" fullWidth>
-          <DialogContent>
-            <AdSense
-              adSlot={AD_SLOT}
-              style={{ display: 'block', textAlign: 'center' }}
-              format="auto"
-              responsive={true}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseAd}>Cerrar</Button>
-          </DialogActions>
-        </Dialog>
+        {isAdSenseVerified && (
+          <Dialog open={showAd} onClose={handleCloseAd} maxWidth="md" fullWidth>
+            <DialogContent>
+              <AdSense
+                adSlot={AD_SLOT}
+                style={{ display: 'block', textAlign: 'center' }}
+                format="auto"
+                responsive={true}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseAd}>Cerrar</Button>
+            </DialogActions>
+          </Dialog>
+        )}
       </Container>
     </Box>
   );
