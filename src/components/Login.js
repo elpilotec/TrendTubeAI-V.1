@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { Button, Typography, Box, IconButton, Snackbar, Alert, CircularProgress } from '@mui/material';
-import { Google as GoogleIcon, Close as CloseIcon } from '@mui/icons-material';
-import { useGoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
-
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [redirectUriDisplayed, setRedirectUriDisplayed] = useState('');  // Nuevo estado para mostrar el redirectUri
 
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setIsLoading(true);
       try {
+<<<<<<< HEAD
         console.log('Redirect URI being used:', window.location.href); // Captura el redirect_uri exacto
+=======
+        const redirectUri = window.location.href;
+        setRedirectUriDisplayed(redirectUri);  // Guardar el redirectUri en el estado
+>>>>>>> 523d2d017ad81075295c6815170ffaca545955a6
 
         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
@@ -41,20 +41,13 @@ export default function Login({ onLogin }) {
       console.error('Login Failed:', errorResponse);
       setError('Login failed. Please try again.');
     },
+<<<<<<< HEAD
     flow: 'implicit',  // Opción para flujo implícito
+=======
+    flow: 'implicit',
+>>>>>>> 523d2d017ad81075295c6815170ffaca545955a6
     redirectUri: 'https://www.trendtubeai.com',  // Especificamos el redirectUri para que coincida con Google Cloud Console
   });
-
-  const handleClose = () => {
-    navigate('/');
-  };
-
-  const handleCloseError = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setError(null);
-  };
 
   return (
     <Box sx={{ 
@@ -70,18 +63,6 @@ export default function Login({ onLogin }) {
       boxShadow: '0px 0px 10px rgba(0,0,0,0.1)',
       borderRadius: '8px',
     }}>
-      <IconButton
-        onClick={handleClose}
-        sx={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          zIndex: 1,
-        }}
-        aria-label="Close"
-      >
-        <CloseIcon />
-      </IconButton>
       <Typography variant="h6" gutterBottom sx={{ mt: 2, textAlign: 'center' }}>
         Inicia sesión para Acceder a Todas las Funciones
       </Typography>
@@ -103,6 +84,12 @@ export default function Login({ onLogin }) {
       >
         {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión con Google'}
       </Button>
+
+      {/* Aquí mostramos el redirectUri temporalmente */}
+      <Typography variant="body1" sx={{ mt: 2, color: 'blue' }}>
+        Redirect URI: {redirectUriDisplayed}
+      </Typography>
+
       <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseError}>
         <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
           {error}
