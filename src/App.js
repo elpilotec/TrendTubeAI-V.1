@@ -14,6 +14,7 @@ import { lightTheme, darkTheme } from './theme';
 import { Alert, Snackbar, CircularProgress } from '@mui/material';
 
 function App() {
+  // Manejo del estado de modo oscuro, usuario y premium
   const [darkMode, setDarkMode] = useState(() => {
     const savedMode = localStorage.getItem('darkMode');
     return savedMode ? JSON.parse(savedMode) : false;
@@ -25,15 +26,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const theme = darkMode ? darkTheme : lightTheme;
 
+  // Leer el Google Client ID desde las variables de entorno
   const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
+  // Efecto para inicializar la aplicación
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log('Initializing app...');
         console.log('Google Client ID:', googleClientId);
-        console.log('Environment variables:', process.env);
-        
+        if (!googleClientId) {
+          throw new Error('Google Client ID is missing.');
+        }
+
+        // Recuperar el usuario y el estado premium del localStorage
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           setUser(JSON.parse(storedUser));
@@ -42,7 +47,6 @@ function App() {
         if (storedIsPremium) {
           setIsPremium(JSON.parse(storedIsPremium));
         }
-        console.log('App initialized successfully');
       } catch (error) {
         console.error('Error initializing app:', error);
         setError('Failed to initialize app. Please try refreshing the page.');
@@ -54,19 +58,17 @@ function App() {
     initializeApp();
   }, [googleClientId]);
 
+  // Efecto para actualizar el modo oscuro en localStorage
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  const toggleDarkMode = () => {
-    setDarkMode(prevMode => !prevMode);
-  };
-
+  // Manejo de eventos de login, logout y suscripción premium
   const handleLogin = (userData) => {
     try {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      const userIsPremium = false; // This should come from your backend
+      const userIsPremium = false; // Este valor debería venir del backend
       setIsPremium(userIsPremium);
       localStorage.setItem('isPremium', JSON.stringify(userIsPremium));
     } catch (error) {
@@ -88,7 +90,6 @@ function App() {
       setIsPremium(true);
       setShowPremiumSubscription(false);
       localStorage.setItem('isPremium', JSON.stringify(true));
-      console.log('Usuario actualizado a Premium');
     } catch (error) {
       console.error('Error upgrading to premium:', error);
       setError('Failed to upgrade to premium. Please try again.');
@@ -103,6 +104,7 @@ function App() {
     setError(null);
   };
 
+  // Si la aplicación está cargando, mostrar un spinner
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -111,6 +113,7 @@ function App() {
     );
   }
 
+  // Si no hay Google Client ID, mostrar un mensaje de error
   if (!googleClientId) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -121,6 +124,7 @@ function App() {
     );
   }
 
+  // Si todo está bien, mostrar la aplicación envuelta en el GoogleOAuthProvider
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <ThemeProvider theme={theme}>
@@ -129,7 +133,7 @@ function App() {
           <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Header 
               darkMode={darkMode} 
-              toggleDarkMode={toggleDarkMode} 
+              toggleDarkMode={() => setDarkMode(prevMode => !prevMode)} 
               user={user}
               onLogout={handleLogout}
               isPremium={isPremium}
