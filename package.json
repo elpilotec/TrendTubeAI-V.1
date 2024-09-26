@@ -9,11 +9,15 @@
     "@mui/material": "^6.1.1",
     "@mui/styles": "^6.1.0",
     "@react-oauth/google": "^0.12.1",
+    "@stripe/react-stripe-js": "^2.8.0",
+    "@stripe/stripe-js": "^4.5.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "express": "^4.21.0",
     "lucide-react": "^0.441.0",
     "openai": "^4.59.0",
     "react": "^18.3.1",
@@ -21,13 +25,16 @@
     "react-router-dom": "^6.26.2",
     "react-scripts": "5.0.1",
     "sentiment": "^5.0.2",
+    "stripe": "^16.12.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "node server.js",
+    "dev": "concurrently \"npm run start\" \"npm run server\""
   },
   "eslintConfig": {
     "extends": [
@@ -54,6 +61,7 @@
   "license": "ISC",
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3"
   }
 }

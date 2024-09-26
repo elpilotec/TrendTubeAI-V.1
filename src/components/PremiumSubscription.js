@@ -8,114 +8,80 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-  CircularProgress,
+  Paper,
 } from '@mui/material';
 import {
   Star as StarIcon,
   Check as CheckIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import PaymentModal from './PaymentModal';
+import StripePayment from './StripePayment';
 
-interface PremiumSubscriptionProps {
-  onUpgrade: () => void;
-  onClose: () => void;
-}
-
-export default function PremiumSubscription({ onUpgrade, onClose }: PremiumSubscriptionProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+export default function PremiumSubscription({ onUpgrade, onClose }) {
+  const [showStripePayment, setShowStripePayment] = useState(false);
 
   const handleSubscribe = () => {
-    setShowPaymentModal(true);
+    setShowStripePayment(true);
   };
 
-  const handleClosePaymentModal = () => {
-    setShowPaymentModal(false);
+  const handlePaymentSuccess = () => {
+    setShowStripePayment(false);
+    onUpgrade();
   };
 
-  const handlePaymentSubmit = (paymentDetails: any) => {
-    setIsLoading(true);
-    // Simulate API call for payment processing
-    setTimeout(() => {
-      setIsLoading(false);
-      onUpgrade();
-      onClose();
-    }, 2000);
+  const handlePaymentClose = () => {
+    setShowStripePayment(false);
   };
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        mt: 2,
-        p: 3,
-        border: '2px solid #ff6666',
-        borderRadius: 2,
-        backgroundColor: '#fff1f1',
-      }}
-    >
-      <IconButton
-        onClick={onClose}
-        sx={{
-          position: 'absolute',
-          right: 8,
-          top: 8,
-          color: '#ff6666',
-        }}
-        aria-label="Cerrar"
-      >
-        <CloseIcon />
-      </IconButton>
-      <Typography variant="h5" gutterBottom sx={{ color: '#ff6666', fontWeight: 'bold' }}>
-        Suscripción Premium
-      </Typography>
-      <Typography variant="body1" gutterBottom sx={{ color: '#333' }}>
-        Obtén acceso a funciones exclusivas por solo $5 al mes:
-      </Typography>
-      <List>
-        <ListItem>
-          <ListItemIcon>
-            <CheckIcon sx={{ color: '#ff6666' }} />
-          </ListItemIcon>
-          <ListItemText primary="Generación de ideas mejorada" primaryTypographyProps={{ sx: { color: '#333' } }} />
-        </ListItem>
-        <ListItem>
-          <ListItemIcon>
-            <CheckIcon sx={{ color: '#ff6666' }} />
-          </ListItemIcon>
-          <ListItemText primary="Guardar ideas en favoritos" primaryTypographyProps={{ sx: { color: '#333' } }} />
-        </ListItem>
-        <ListItem>
-          <ListItemIcon>
-            <CheckIcon sx={{ color: '#ff6666' }} />
-          </ListItemIcon>
-          <ListItemText primary="Prioridad en el soporte" primaryTypographyProps={{ sx: { color: '#333' } }} />
-        </ListItem>
-      </List>
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<StarIcon />}
-        onClick={handleSubscribe}
-        fullWidth
-        disabled={isLoading}
-        sx={{
-          mt: 2,
-          backgroundColor: '#ff6666',
-          color: '#fff',
-          '&:hover': {
-            backgroundColor: '#ff4444',
-          },
-        }}
-      >
-        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Suscribirse por $5/mes'}
-      </Button>
-      <PaymentModal
-        open={showPaymentModal}
-        onClose={handleClosePaymentModal}
-        onSubmit={handlePaymentSubmit}
-      />
-    </Box>
+    <Paper elevation={3} sx={{ maxWidth: 400, mx: 'auto', mt: 4, overflow: 'hidden' }}>
+      <Box sx={{ position: 'relative', p: 3, bgcolor: 'background.paper' }}>
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: 'text.secondary',
+          }}
+          aria-label="Close"
+        >
+          <CloseIcon />
+        </IconButton>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+          Premium Subscription
+        </Typography>
+        <Typography variant="body1" gutterBottom sx={{ color: 'text.primary' }}>
+          Get access to exclusive features for only $5 per month:
+        </Typography>
+        <List>
+          {['Enhanced idea generation', 'Save ideas to favorites', 'Priority support'].map((feature, index) => (
+            <ListItem key={index} disableGutters>
+              <ListItemIcon>
+                <CheckIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText primary={feature} primaryTypographyProps={{ color: 'text.primary' }} />
+            </ListItem>
+          ))}
+        </List>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<StarIcon />}
+          onClick={handleSubscribe}
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Subscribe for $5/month
+        </Button>
+      </Box>
+      {showStripePayment && (
+        <StripePayment
+          amount={5}
+          onSuccess={handlePaymentSuccess}
+          onClose={handlePaymentClose}
+        />
+      )}
+    </Paper>
   );
 }
