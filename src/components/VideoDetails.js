@@ -8,11 +8,11 @@ import { styled } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
-import { generarIdeaCorta } from '../services/ChatGPTServices';
+import { generarIdea } from '../services/ChatGPTServices';
 import AdSense from './AdSense';
 
-// Define the ad slot as a constant
-const AD_SLOT = "9690922331"; // Replace with your actual ad slot
+// Use environment variable for ad slot
+const AD_SLOT = process.env.REACT_APP_ADSENSE_SLOT;
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -73,7 +73,11 @@ const GenerateIdeaButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-export default function VideoDetails() {
+interface VideoDetailsProps {
+  isPremium: boolean;
+}
+
+export default function VideoDetails({ isPremium }: VideoDetailsProps) {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -108,10 +112,7 @@ export default function VideoDetails() {
   }, [loadVideoDetails]);
 
   useEffect(() => {
-    // Simula la verificación de AdSense
-    // En un caso real, esto debería ser una llamada a tu backend
     const checkAdSenseVerification = async () => {
-      // Simula una llamada API
       await new Promise(resolve => setTimeout(resolve, 2000));
       setIsAdSenseVerified(true);
     };
@@ -123,7 +124,7 @@ export default function VideoDetails() {
     setLoadingIdea(true);
     setErrorMessage("");
     setIdea(null);
-    if (isAdSenseVerified) {
+    if (!isPremium && isAdSenseVerified) {
       setShowAd(true);
     } else {
       handleGenerateIdeaWithoutAd();
@@ -132,7 +133,7 @@ export default function VideoDetails() {
 
   const handleGenerateIdeaWithoutAd = async () => {
     try {
-      const result = await generarIdeaCorta(videoDetails, comments);
+      const result = await generarIdea(videoDetails, comments, isPremium);
       if (result.success) {
         setIdea(result.idea);
       } else {
@@ -201,27 +202,48 @@ export default function VideoDetails() {
             {idea.hashtags && idea.hashtags.length > 0 ? idea.hashtags.join(' ') : 'No hay hashtags disponibles'}
           </Typography>
         </Box>
-        <Box>
-          <Box display="flex" alignItems="center">
-            <HighlightedText variant="subtitle1" gutterBottom>
-              Sugerencias de Producción:
-            </HighlightedText>
-            <CopyButton onClick={() => copyToClipboard(idea.sugerenciasProduccion.join('\n'), 'Sugerencias de Producción')} aria-label="Copiar sugerencias de producción">
-              <ContentCopyIcon fontSize="small" />
-            </CopyButton>
+        {isPremium && (
+          <Box mb={2}>
+            <Box display="flex" alignItems="center">
+              <HighlightedText variant="subtitle1" gutterBottom>
+                Sugerencias de Producción:
+              </HighlightedText>
+              <CopyButton onClick={() => copyToClipboard(idea.sugerenciasProduccion.join('\n'), 'Sugerencias de Producción')} aria-label="Copiar sugerencias de producción">
+                <ContentCopyIcon fontSize="small" />
+              </CopyButton>
+            </Box>
+            {idea.sugerenciasProduccion && idea.sugerenciasProduccion.length > 0 ? (
+              <List>
+                {idea.sugerenciasProduccion.map((sugerencia, index) => (
+                  <ListItem key={index}>
+                    <ListItemText primary={sugerencia} />
+                  </ListItem>
+                ))}
+              </List>
+            ) : (
+              <Typography variant="body2">No hay sugerencias de producción disponibles</Typography>
+            )}
           </Box>
-          {idea.sugerenciasProduccion && idea.sugerenciasProduccion.length > 0 ? (
+        )}
+        {isPremium && idea.ideasAdicionales && idea.ideasAdicionales.length > 0 && (
+          <Box mt={2}>
+            <Box display="flex" alignItems="center">
+              <HighlightedText variant="subtitle1" gutterBottom>
+                Ideas Adicionales:
+              </HighlightedText>
+              <CopyButton onClick={() => copyToClipboard(idea.ideasAdicionales.join('\n'), 'Ideas Adicionales')} aria-label="Copiar ideas adicionales">
+                <ContentCopyIcon fontSize="small" />
+              </CopyButton>
+            </Box>
             <List>
-              {idea.sugerenciasProduccion.map((sugerencia, index) => (
+              {idea.ideasAdicionales.map((ideaAdicional, index) => (
                 <ListItem key={index}>
-                  <ListItemText primary={sugerencia} />
+                  <ListItemText primary={ideaAdicional} />
                 </ListItem>
               ))}
             </List>
-          ) : (
-            <Typography variant="body2">No hay sugerencias de producción disponibles</Typography>
-          )}
-        </Box>
+          </Box>
+        )}
       </StyledPaper>
     );
   };
@@ -305,7 +327,7 @@ export default function VideoDetails() {
           onClose={() => setSnackbarOpen(false)}
           message={snackbarMessage || errorMessage}
         />
-        {isAdSenseVerified && (
+        {!isPremium && isAdSenseVerified && (
           <Dialog open={showAd} onClose={handleCloseAd} maxWidth="md" fullWidth>
             <DialogContent>
               <AdSense

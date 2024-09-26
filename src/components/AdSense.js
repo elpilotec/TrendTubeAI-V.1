@@ -13,7 +13,7 @@ const AdSense = ({ adSlot, style, format, responsive }) => {
     <ins
       className="adsbygoogle"
       style={style || { display: 'block' }}
-      data-ad-client="ca-pub-4873375803261906"
+      data-ad-client={process.env.REACT_APP_ADSENSE_CLIENT}
       data-ad-slot={adSlot}
       data-ad-format={format || 'auto'}
       data-full-width-responsive={responsive}
