@@ -1,22 +1,49 @@
-import React from 'react';
-import { Button, Typography, Box, IconButton } from '@mui/material';
+import React, { useState } from 'react';
+import { Button, Typography, Box, IconButton, Snackbar, Alert } from '@mui/material';
 import { Google as GoogleIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   const login = useGoogleLogin({
-    onSuccess: tokenResponse => {
-      // Aquí deberías hacer una llamada a tu backend para verificar el token
-      // y obtener la información del usuario
-      onLogin({ id: 'user_id', name: 'User Name' });
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to fetch user info');
+        }
+
+        const userInfo = await userInfoResponse.json();
+        onLogin({
+          id: userInfo.sub,
+          name: userInfo.name,
+          email: userInfo.email,
+        });
+        navigate('/');
+      } catch (error) {
+        console.error('Error during login:', error);
+        setError('Failed to log in. Please try again.');
+      }
     },
+    onError: (errorResponse) => {
+      console.error('Login Failed:', errorResponse);
+      setError('Login failed. Please try again.');
+    },
+    flow: 'implicit',
   });
 
   const handleClose = () => {
     navigate('/');
+  };
+
+  const handleCloseError = () => {
+    setError(null);
   };
 
   return (
@@ -60,6 +87,11 @@ export default function Login({ onLogin }) {
       >
         Iniciar sesión con Google
       </Button>
+      <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseError}>
+        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
