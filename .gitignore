@@ -6,3 +6,15 @@ build/
 
 # Environment variables
 .env
+
+# Certificados y claves
+ca.crt
+ca.key
+cert.crt
+cert.key
+
+# Archivos de servidor
+server.js
+
+# JAR files
+bfg-*.jar
