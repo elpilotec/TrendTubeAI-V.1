@@ -221,7 +221,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
                 ))}
               </List>
             ) : (
-              <Typography variant="body2">No hay sugerencias de producción disponibles</Typography>
+              <Typography variant="body2">No hay Sugerencias de producción disponibles</Typography>
             )}
           </Box>
         )}
