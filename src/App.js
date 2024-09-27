@@ -18,10 +18,13 @@ import { Alert, Snackbar, CircularProgress } from '@mui/material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-// Estas funciones deben implementarse para interactuar con tu backend
-async function checkUserPremiumStatus(userId) {
-  console.log('Verificando el estado premium para el usuario:', userId);
-  return false; // Por defecto, no es premium para pruebas
+async function checkUserPremiumStatus(email) {
+  const response = await fetch(`/api/check-premium-email?email=${encodeURIComponent(email)}`);
+  if (!response.ok) {
+    throw new Error('Failed to check premium status');
+  }
+  const data = await response.json();
+  return data.isPremium;
 }
 
 async function upgradeToPremium(userId) {
@@ -57,7 +60,7 @@ function App() {
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          const userIsPremium = await checkUserPremiumStatus(parsedUser.id);
+          const userIsPremium = await checkUserPremiumStatus(parsedUser.email);
           setIsPremium(userIsPremium);
         }
         console.log('Aplicación inicializada con éxito');
@@ -80,8 +83,7 @@ function App() {
     try {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      const userIsPremium = await checkUserPremiumStatus(userData.id);
-      setIsPremium(userIsPremium);
+      setIsPremium(userData.isPremium);
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error);
       setError('No se pudo iniciar sesión. Por favor, intenta de nuevo.');
