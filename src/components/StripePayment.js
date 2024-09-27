@@ -6,7 +6,7 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { Button, Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Button, Box, Typography, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
@@ -15,6 +15,8 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
   const elements = useElements();
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -28,12 +30,13 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
     }
 
     try {
+      console.log('Intentando conectar con:', apiUrl);
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: amount }), // Enviamos la cantidad sin multiplicar
+        body: JSON.stringify({ amount: amount }),
       });
 
       if (!response.ok) {
@@ -65,6 +68,8 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
     } catch (err) {
       console.error('Error en el pago:', err);
       setError(err.message);
+      setDialogMessage(getErrorMessage(err));
+      setOpenDialog(true);
       if (typeof onError === 'function') {
         onError(err);
       } else {
@@ -73,6 +78,28 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const getErrorMessage = (error) => {
+    if (error.message.includes('Failed to fetch')) {
+      return 'No se pudo conectar con el servidor. Por favor, verifica tu conexión a internet y que el servidor esté en funcionamiento.';
+    }
+    switch (error.code) {
+      case 'card_declined':
+        return 'Tu tarjeta ha sido rechazada. Por favor, verifica los datos o intenta con otra tarjeta.';
+      case 'expired_card':
+        return 'Tu tarjeta ha expirado. Por favor, utiliza una tarjeta válida.';
+      case 'incorrect_cvc':
+        return 'El código de seguridad (CVC) es incorrecto. Por favor, verifica e intenta de nuevo.';
+      case 'processing_error':
+        return 'Hubo un error al procesar tu pago. Por favor, intenta de nuevo más tarde.';
+      default:
+        return 'Hubo un error en el proceso de pago. Por favor, verifica tus datos e intenta de nuevo.';
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   return (
@@ -112,6 +139,15 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
       >
         Cancelar
       </Button>
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Error en el pago</DialogTitle>
+        <DialogContent>
+          <Typography>{dialogMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
     </form>
   );
 };

@@ -16,20 +16,43 @@ import StripePayment from './components/StripePayment';
 import { lightTheme, darkTheme } from './theme';
 import { Alert, Snackbar, CircularProgress } from '@mui/material';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.trendtubeai.com';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 async function checkUserPremiumStatus(email) {
-  const response = await fetch(`/api/check-premium-email?email=${encodeURIComponent(email)}`);
-  if (!response.ok) {
-    throw new Error('Failed to check premium status');
+  try {
+    const response = await fetch(`${API_URL}/api/check-premium-email?email=${encodeURIComponent(email)}`, {
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error('Failed to check premium status');
+    }
+    const data = await response.json();
+    return data.isPremium;
+  } catch (error) {
+    console.error('Error al verificar el estado premium:', error);
+    return false;
   }
-  const data = await response.json();
-  return data.isPremium;
 }
 
 async function upgradeToPremium(userId) {
-  console.log('Actualizando usuario a premium:', userId);
-  return true; // Simula una actualización exitosa
+  try {
+    const response = await fetch(`${API_URL}/api/register-premium-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: userId }),
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error('Failed to upgrade to premium');
+    }
+    return true;
+  } catch (error) {
+    console.error('Error al actualizar a premium:', error);
+    return false;
+  }
 }
 
 function App() {
@@ -83,7 +106,8 @@ function App() {
     try {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      setIsPremium(userData.isPremium);
+      const userIsPremium = await checkUserPremiumStatus(userData.email);
+      setIsPremium(userIsPremium);
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error);
       setError('No se pudo iniciar sesión. Por favor, intenta de nuevo.');
@@ -105,7 +129,7 @@ function App() {
     try {
       setIsLoading(true);
       if (user) {
-        const success = await upgradeToPremium(user.id);
+        const success = await upgradeToPremium(user.email);
         if (success) {
           setIsPremium(true);
           setShowPremiumSubscription(false);
@@ -190,6 +214,7 @@ function App() {
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                     onClose={handleCloseStripePayment}
+                    apiUrl={`${API_URL}/api/create-payment-intent`}
                   />
                 )}
                 <Routes>
