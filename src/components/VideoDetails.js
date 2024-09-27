@@ -11,7 +11,6 @@ import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
 import { generarIdea } from '../services/ChatGPTServices';
 import AdSense from './AdSense';
 
-// Use environment variable for ad slot
 const AD_SLOT = process.env.REACT_APP_ADSENSE_SLOT;
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -75,9 +74,10 @@ const GenerateIdeaButton = styled(Button)(({ theme }) => ({
 
 interface VideoDetailsProps {
   isPremium: boolean;
+  isLoggedIn: boolean;
 }
 
-export default function VideoDetails({ isPremium }: VideoDetailsProps) {
+export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProps) {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -124,7 +124,7 @@ export default function VideoDetails({ isPremium }: VideoDetailsProps) {
     setLoadingIdea(true);
     setErrorMessage("");
     setIdea(null);
-    if (!isPremium && isAdSenseVerified) {
+    if (!isLoggedIn || (!isPremium && isAdSenseVerified)) {
       setShowAd(true);
     } else {
       handleGenerateIdeaWithoutAd();
@@ -327,7 +327,7 @@ export default function VideoDetails({ isPremium }: VideoDetailsProps) {
           onClose={() => setSnackbarOpen(false)}
           message={snackbarMessage || errorMessage}
         />
-        {!isPremium && isAdSenseVerified && (
+        {(!isLoggedIn || !isPremium) && isAdSenseVerified && (
           <Dialog open={showAd} onClose={handleCloseAd} maxWidth="md" fullWidth>
             <DialogContent>
               <AdSense
