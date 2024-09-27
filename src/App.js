@@ -18,29 +18,15 @@ import { Alert, Snackbar, CircularProgress } from '@mui/material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-// These functions should be implemented to interact with your backend
+// Estas funciones deben implementarse para interactuar con tu backend
 async function checkUserPremiumStatus(userId) {
-  // For now, we'll simulate an API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Simulate a 10% chance of the user being premium
-      resolve(Math.random() < 0.1);
-    }, 1000);
-  });
+  console.log('Verificando el estado premium para el usuario:', userId);
+  return false; // Por defecto, no es premium para pruebas
 }
 
 async function upgradeToPremium(userId) {
-  // For now, we'll simulate an API call
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // Simulate a 90% chance of successful upgrade
-      if (Math.random() < 0.9) {
-        resolve();
-      } else {
-        reject(new Error('Failed to upgrade to premium'));
-      }
-    }, 1000);
-  });
+  console.log('Actualizando usuario a premium:', userId);
+  return true; // Simula una actualización exitosa
 }
 
 function App() {
@@ -61,24 +47,23 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log('Initializing app...');
-        console.log('Google Client ID:', googleClientId);
+        console.log('Inicializando la aplicación...');
+        console.log('ID de cliente de Google:', googleClientId);
         if (!googleClientId) {
-          throw new Error('Google Client ID is missing.');
+          throw new Error('Falta el ID de cliente de Google.');
         }
 
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          const userIsPremium = await checkUserPremiumStatus(parsedUser.id);
+          setIsPremium(userIsPremium);
         }
-        const storedIsPremium = localStorage.getItem('isPremium');
-        if (storedIsPremium) {
-          setIsPremium(JSON.parse(storedIsPremium));
-        }
-        console.log('App initialized successfully');
+        console.log('Aplicación inicializada con éxito');
       } catch (error) {
-        console.error('Error initializing app:', error);
-        setError('Failed to initialize app. Please try refreshing the page.');
+        console.error('Error al inicializar la aplicación:', error);
+        setError('No se pudo inicializar la aplicación. Por favor, intenta recargar la página.');
       } finally {
         setIsLoading(false);
       }
@@ -97,10 +82,9 @@ function App() {
       localStorage.setItem('user', JSON.stringify(userData));
       const userIsPremium = await checkUserPremiumStatus(userData.id);
       setIsPremium(userIsPremium);
-      localStorage.setItem('isPremium', JSON.stringify(userIsPremium));
     } catch (error) {
-      console.error('Error during login:', error);
-      setError('Failed to log in. Please try again.');
+      console.error('Error durante el inicio de sesión:', error);
+      setError('No se pudo iniciar sesión. Por favor, intenta de nuevo.');
     }
   };
 
@@ -109,27 +93,38 @@ function App() {
     setIsPremium(false);
     setShowPremiumSubscription(true);
     localStorage.removeItem('user');
-    localStorage.removeItem('isPremium');
   };
 
   const handleUpgradeToPremium = async () => {
     setShowStripePayment(true);
   };
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (paymentIntent) => {
     try {
       setIsLoading(true);
-      await upgradeToPremium(user.id);
-      setIsPremium(true);
-      setShowPremiumSubscription(false);
-      setShowStripePayment(false);
-      localStorage.setItem('isPremium', JSON.stringify(true));
+      if (user) {
+        const success = await upgradeToPremium(user.id);
+        if (success) {
+          setIsPremium(true);
+          setShowPremiumSubscription(false);
+          setShowStripePayment(false);
+        } else {
+          throw new Error('La actualización a premium falló');
+        }
+      } else {
+        throw new Error('Usuario no ha iniciado sesión');
+      }
     } catch (error) {
-      console.error('Error upgrading to premium:', error);
-      setError('Failed to upgrade to premium. Please try again.');
+      console.error('Error al actualizar a premium:', error);
+      setError('No se pudo actualizar a premium. Por favor, intenta de nuevo.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePaymentError = (error) => {
+    console.error('Error en el pago:', error);
+    setError('Hubo un error en el proceso de pago. Por favor, intenta de nuevo.');
   };
 
   const handleClosePremiumSubscription = () => {
@@ -159,7 +154,7 @@ function App() {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <Alert severity="error">
-          Google Client ID is not set. Please check your environment variables.
+          El ID de cliente de Google no está configurado. Por favor, verifica tus variables de entorno.
         </Alert>
       </Box>
     );
@@ -191,6 +186,7 @@ function App() {
                   <StripePayment
                     amount={5}
                     onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
                     onClose={handleCloseStripePayment}
                   />
                 )}

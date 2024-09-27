@@ -55,7 +55,7 @@ export default function PremiumSubscription({ onUpgrade, onClose }) {
           Get access to exclusive features for only $5 per month:
         </Typography>
         <List>
-          {['Enhanced idea generation', 'Save ideas to favorites', 'Priority support'].map((feature, index) => (
+          {['Enhanced Idea Generation', 'Additional Tips and Ideas','No Ads', 'Priority Support'].map((feature, index) => (
             <ListItem key={index} disableGutters>
               <ListItemIcon>
                 <CheckIcon color="primary" />

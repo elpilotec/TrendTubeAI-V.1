@@ -6,11 +6,11 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { Button, Box, Typography, CircularProgress } from '@mui/material';
+import { Button, Box, Typography, CircularProgress, Alert } from '@mui/material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-const CheckoutForm = ({ amount }) => {
+const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
@@ -19,44 +19,60 @@ const CheckoutForm = ({ amount }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setProcessing(true);
+    setError(null);
 
     if (!stripe || !elements) {
+      setError('Stripe no se ha inicializado.');
+      setProcessing(false);
       return;
     }
 
     try {
-      const { error: backendError, clientSecret } = await fetch('/api/create-payment-intent', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: amount * 100 }), // amount in cents
-      }).then(res => res.json());
+        body: JSON.stringify({ amount: amount }), // Enviamos la cantidad sin multiplicar
+      });
 
-      if (backendError) {
-        setError(backendError.message);
-        setProcessing(false);
-        return;
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Error del servidor: ${response.status} ${response.statusText}\n${errorData}`);
       }
 
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      const data = await response.json();
+
+      if (!data.clientSecret) {
+        throw new Error('No se recibió el client secret del servidor');
+      }
+
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
         },
       });
 
       if (stripeError) {
-        setError(stripeError.message);
-      } else if (paymentIntent.status === 'succeeded') {
-        console.log('Payment succeeded:', paymentIntent.id);
-        // Here you can call a function to update the user's subscription status
+        throw new Error(stripeError.message);
+      }
+
+      if (paymentIntent.status === 'succeeded') {
+        onSuccess(paymentIntent);
+      } else {
+        throw new Error(`Estado del pago: ${paymentIntent.status}`);
       }
     } catch (err) {
-      console.error('Error:', err);
-      setError('An unexpected error occurred.');
+      console.error('Error en el pago:', err);
+      setError(err.message);
+      if (typeof onError === 'function') {
+        onError(err);
+      } else {
+        console.error('onError no es una función:', onError);
+      }
+    } finally {
+      setProcessing(false);
     }
-
-    setProcessing(false);
   };
 
   return (
@@ -77,7 +93,7 @@ const CheckoutForm = ({ amount }) => {
           },
         }}
       />
-      {error && <Typography color="error" mt={2}>{error}</Typography>}
+      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
       <Button
         type="submit"
         variant="contained"
@@ -86,20 +102,28 @@ const CheckoutForm = ({ amount }) => {
         disabled={!stripe || processing}
         sx={{ mt: 2 }}
       >
-        {processing ? <CircularProgress size={24} /> : `Pay $${amount}`}
+        {processing ? <CircularProgress size={24} /> : `Pagar $${amount.toFixed(2)}`}
+      </Button>
+      <Button
+        onClick={onClose}
+        variant="outlined"
+        fullWidth
+        sx={{ mt: 1 }}
+      >
+        Cancelar
       </Button>
     </form>
   );
 };
 
-const StripePayment = ({ amount }) => {
+const StripePayment = ({ amount, onSuccess, onError, onClose, apiUrl = 'http://localhost:3001/api/create-payment-intent' }) => {
   return (
     <Elements stripe={stripePromise}>
       <Box sx={{ maxWidth: 400, margin: 'auto', mt: 4 }}>
         <Typography variant="h5" gutterBottom>
-          Complete Your Payment
+          Completa tu pago
         </Typography>
-        <CheckoutForm amount={amount} />
+        <CheckoutForm amount={amount} onSuccess={onSuccess} onError={onError} onClose={onClose} apiUrl={apiUrl} />
       </Box>
     </Elements>
   );
