@@ -105,7 +105,7 @@ export default function Login({ onLogin }) {
         <CloseIcon />
       </IconButton>
       <Typography variant="h6" gutterBottom sx={{ mt: 2, textAlign: 'center' }}>
-        Inicia sesión para Acceder a Todas las Funciones
+        Inicia Sesión para Acceder a Todas las Funciones
       </Typography>
       <Button
         variant="contained"
