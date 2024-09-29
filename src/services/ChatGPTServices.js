@@ -1,57 +1,58 @@
 import axios from 'axios';
+import { VideoDetails, TopComment, GeneratedIdea } from '../types';
 
 const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
 
-const generatePrompt = (videoDetails, topComments, isPremium) => {
+const generatePrompt = (videoDetails: VideoDetails, topComments: TopComment[], isPremium: boolean): string => {
   if (!videoDetails || !topComments) {
     throw new Error('Faltan detalles del video o comentarios');
   }
 
+  const commentSummary = topComments
+    .map(comment => comment.text)
+    .join(' ')
+    .slice(0, 500);
+
   return `
-Genera una idea completa y detallada para un video corto viral de menos de 1 minuto basado en el siguiente video de YouTube:
+Genera una idea innovadora y viral para un video corto de menos de 1 minuto basado en este video de YouTube:
 
 Título: "${videoDetails.title || 'No disponible'}"
-Descripción: "${videoDetails.description || 'No disponible'}"
+Descripción: "${videoDetails.description?.slice(0, 200) || 'No disponible'}"
 Duración: ${videoDetails.duration || 'No disponible'} segundos
 Vistas: ${videoDetails.viewCount || 'No disponible'}
 
-Comentarios más relevantes:
-${topComments.map(comment => `- "${comment.text}"`).join('\n')}
+Resumen de comentarios relevantes: "${commentSummary}"
 
 La idea DEBE incluir:
-1. Un título atractivo y descriptivo (máximo 60 caracteres).
-2. Un guión narrado detallado (${isPremium ? 'entre 200 y 250' : 'entre 150 y 200'} palabras) que se pueda leer directamente para crear el video. El guión debe incluir:
-   - Un gancho inicial impactante (5-10 segundos)
+1. Un título atractivo y descriptivo (máximo 60 caracteres) que capture la esencia del video original pero con un giro único.
+2. Un guión narrado detallado (${isPremium ? '200-250' : '150-200'} palabras) estructurado así:
+   - Gancho inicial impactante (5-10 segundos)
    - Desarrollo del contenido principal (40-45 segundos)
-   - Un cierre fuerte o llamada a la acción (5-10 segundos)
-   - Instrucciones de entonación y pausas entre corchetes, por ejemplo: [pausa dramática], [tono emocionado], [susurro], etc.
+   - Cierre fuerte o llamada a la acción (5-10 segundos)
+   - Incluye [instrucciones de entonación] y [pausas] entre corchetes
 3. ${isPremium ? '7' : '5'} hashtags relevantes y populares.
-4. ${isPremium ? '4-5' : '2-3'} sugerencias específicas para la producción del video (ángulos de cámara, efectos, música, etc.).
+4. ${isPremium ? '4-5' : '2-3'} sugerencias específicas para la producción del video.
 ${isPremium ? '5. 2-3 ideas para contenido adicional relacionado.' : ''}
 
-Formato requerido para la idea:
+Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral. El guión debe ser fluido y atractivo, incorporando elementos del video original y los comentarios más relevantes.
+${isPremium ? 'Como solicitud premium, proporciona ideas más detalladas y de mayor calidad.' : ''}
+
+Formato requerido:
 Título: [Título de la idea]
 Guión Narrado:
 [Guión detallado con instrucciones de narración]
-Hashtags: [#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5 ${isPremium ? '#hashtag6 #hashtag7' : ''}]
+Hashtags: [hashtags]
 Sugerencias de Producción:
-- [Sugerencia 1]
-- [Sugerencia 2]
-- [Sugerencia 3]
-${isPremium ? '- [Sugerencia 4]\n- [Sugerencia 5]' : ''}
-${isPremium ? 'Ideas para Contenido Adicional:\n- [Idea 1]\n- [Idea 2]\n- [Idea 3]' : ''}
-
-Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral para plataformas de videos cortos. El guión narrado debe ser fluido, atractivo y fácil de leer en voz alta. Incorpora elementos del video original y los comentarios más relevantes para crear una idea impactante y atractiva.
-${isPremium ? 'Como esta es una solicitud premium, asegúrate de proporcionar ideas más detalladas y de mayor calidad.' : ''}
+- [Sugerencias]
+${isPremium ? 'Ideas para Contenido Adicional:\n- [Ideas]' : ''}
 `;
 };
 
-const parseResponse = (rawContent, isPremium) => {
+const parseResponse = (rawContent: string, isPremium: boolean): GeneratedIdea => {
   const titulo = rawContent.match(/Título:\s*(.+)/)?.[1]?.trim() || 'Título no disponible';
   const guion = rawContent.match(/Guión Narrado:\s*(.+?)(?=\nHashtags:)/s)?.[1]?.trim() || 'Guión no disponible';
   const hashtags = rawContent.match(/Hashtags:\s*(.+)/)?.[1]?.split(/\s+/).filter(Boolean) || [];
   
-  // Updated regex for Sugerencias de Producción
   const sugerenciasMatch = rawContent.match(/Sugerencias de Producción:\s*([\s\S]+?)(?=\n(?:Ideas para Contenido Adicional:|$))/);
   const sugerenciasProduccion = sugerenciasMatch
     ? sugerenciasMatch[1].trim().split('\n').map(item => item.trim().replace(/^-\s*/, ''))
@@ -70,7 +71,7 @@ const parseResponse = (rawContent, isPremium) => {
   };
 };
 
-export const generarIdea = async (videoDetails, topComments, isPremium = false) => {
+export const generarIdea = async (videoDetails: VideoDetails, topComments: TopComment[], isPremium = false): Promise<{ success: boolean; idea?: GeneratedIdea; error?: string }> => {
   if (!apiKey) {
     throw new Error('API Key de OpenAI no encontrada. Verifica tu archivo .env');
   }
@@ -80,11 +81,11 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: "gpt-3.5-turbo",
       messages: [
-        { role: 'system', content: 'Eres un experto en creación de contenido viral para videos cortos y estrategias de marketing digital, con habilidades especiales en escritura de guiones narrados.' },
+        { role: 'system', content: 'Eres un experto en creación de contenido viral para videos cortos y estrategias de marketing digital, con habilidades especiales en escritura de guiones narrados y adaptación creativa de contenido existente.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: isPremium ? 2500 : 2000,
-      temperature: 0.7,
+      temperature: 0.8,
     }, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -110,7 +111,6 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
     return { 
       success: false,
       error: error.message || 'No se pudo generar una idea para el video. Por favor, intenta de nuevo más tarde.',
-      idea: null
     };
   }
 };
