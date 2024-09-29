@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -18,13 +19,15 @@ import { Alert, Snackbar, CircularProgress } from '@mui/material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-async function checkUserPremiumStatus(email) {
-  const response = await fetch(`/api/check-premium-email?email=${encodeURIComponent(email)}`);
-  if (!response.ok) {
-    throw new Error('Failed to check premium status');
+async function checkUserPremiumStatus(userId) {
+  try {
+    const response = await fetch(`/api/check-subscription/${userId}`);
+    const data = await response.json();
+    return data.isActive;
+  } catch (error) {
+    console.error('Error al verificar el estado de la suscripción:', error);
+    return false;
   }
-  const data = await response.json();
-  return data.isPremium;
 }
 
 async function upgradeToPremium(userId) {
@@ -60,7 +63,7 @@ function App() {
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          const userIsPremium = await checkUserPremiumStatus(parsedUser.email);
+          const userIsPremium = await checkUserPremiumStatus(parsedUser.id);
           setIsPremium(userIsPremium);
         }
         console.log('Aplicación inicializada con éxito');
@@ -83,7 +86,8 @@ function App() {
     try {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      setIsPremium(userData.isPremium);
+      const userIsPremium = await checkUserPremiumStatus(userData.id);
+      setIsPremium(userIsPremium);
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error);
       setError('No se pudo iniciar sesión. Por favor, intenta de nuevo.');
@@ -190,6 +194,7 @@ function App() {
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                     onClose={handleCloseStripePayment}
+                    user={user}
                   />
                 )}
                 <Routes>

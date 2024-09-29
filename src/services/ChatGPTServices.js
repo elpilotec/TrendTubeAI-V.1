@@ -19,15 +19,15 @@ Comentarios más relevantes:
 ${topComments.map(comment => `- "${comment.text}"`).join('\n')}
 
 La idea DEBE incluir:
-1. Un título atractivo y descriptivo (máximo 60 caracteres).
-2. Un guión narrado detallado (${isPremium ? 'entre 200 y 250' : 'entre 150 y 200'} palabras) que se pueda leer directamente para crear el video. El guión debe incluir:
-   - Un gancho inicial impactante (5-10 segundos)
-   - Desarrollo del contenido principal (40-45 segundos)
-   - Un cierre fuerte o llamada a la acción (5-10 segundos)
+1. Un título atractivo y descriptivo (máximo 60 caracteres) que capture la esencia del contenido y tenga un alto potencial viral.
+2. Un guión narrado detallado (${isPremium ? 'entre 200 y 250' : 'entre 150 y 200'} palabras) que se pueda leer directamente para crear el video. El guión debe estar estrechamente relacionado con el título y debe incluir:
+   - Un gancho inicial impactante (5-10 segundos) que haga referencia directa al título
+   - Desarrollo del contenido principal (40-45 segundos) que expanda y profundice en el concepto presentado en el título
+   - Un cierre fuerte o llamada a la acción (5-10 segundos) que refuerce el mensaje del título
    - Instrucciones de entonación y pausas entre corchetes, por ejemplo: [pausa dramática], [tono emocionado], [susurro], etc.
-3. ${isPremium ? '7' : '5'} hashtags relevantes y populares.
-4. ${isPremium ? '4-5' : '2-3'} sugerencias específicas para la producción del video (ángulos de cámara, efectos, música, etc.).
-${isPremium ? '5. 2-3 ideas para contenido adicional relacionado.' : ''}
+3. ${isPremium ? '7' : '5'} hashtags relevantes y populares que se relacionen directamente con el título y el contenido del video.
+4. ${isPremium ? '4-5' : '2-3'} sugerencias específicas para la producción del video (ángulos de cámara, efectos, música, etc.) que ayuden a reforzar el mensaje del título.
+${isPremium ? '5. 2-3 ideas para contenido adicional relacionado que expandan el concepto presentado en el título principal.' : ''}
 
 Formato requerido para la idea:
 Título: [Título de la idea]
@@ -41,8 +41,8 @@ Sugerencias de Producción:
 ${isPremium ? '- [Sugerencia 4]\n- [Sugerencia 5]' : ''}
 ${isPremium ? 'Ideas para Contenido Adicional:\n- [Idea 1]\n- [Idea 2]\n- [Idea 3]' : ''}
 
-Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral para plataformas de videos cortos. El guión narrado debe ser fluido, atractivo y fácil de leer en voz alta. Incorpora elementos del video original y los comentarios más relevantes para crear una idea impactante y atractiva.
-${isPremium ? 'Como esta es una solicitud premium, asegúrate de proporcionar ideas más detalladas y de mayor calidad.' : ''}
+Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral para plataformas de videos cortos. El título y el guión narrado deben estar estrechamente relacionados y ser coherentes entre sí. El guión debe ser fluido, atractivo y fácil de leer en voz alta. Incorpora elementos del video original y los comentarios más relevantes para crear una idea impactante y atractiva que se alinee perfectamente con el título propuesto.
+${isPremium ? 'Como esta es una solicitud premium, asegúrate de proporcionar ideas más detalladas y de mayor calidad, manteniendo una fuerte conexión entre el título y el contenido.' : ''}
 `;
 };
 
@@ -51,7 +51,6 @@ const parseResponse = (rawContent, isPremium) => {
   const guion = rawContent.match(/Guión Narrado:\s*(.+?)(?=\nHashtags:)/s)?.[1]?.trim() || 'Guión no disponible';
   const hashtags = rawContent.match(/Hashtags:\s*(.+)/)?.[1]?.split(/\s+/).filter(Boolean) || [];
   
-  // Updated regex for Sugerencias de Producción
   const sugerenciasMatch = rawContent.match(/Sugerencias de Producción:\s*([\s\S]+?)(?=\n(?:Ideas para Contenido Adicional:|$))/);
   const sugerenciasProduccion = sugerenciasMatch
     ? sugerenciasMatch[1].trim().split('\n').map(item => item.trim().replace(/^-\s*/, ''))
@@ -61,12 +60,18 @@ const parseResponse = (rawContent, isPremium) => {
     ? (rawContent.match(/Ideas para Contenido Adicional:\s*([\s\S]+)$/)?.[1]?.trim().split('\n').map(item => item.trim().replace(/^-\s*/, '')) || [])
     : [];
 
+  // Verificar la coherencia entre el título y el guión
+  const titleWords = titulo.toLowerCase().split(/\s+/);
+  const scriptWords = guion.toLowerCase().split(/\s+/);
+  const titleInScript = titleWords.every(word => scriptWords.includes(word));
+
   return {
     titulo,
     guion,
     hashtags,
     sugerenciasProduccion,
-    ...(isPremium && { ideasAdicionales })
+    ...(isPremium && { ideasAdicionales }),
+    coherencia: titleInScript ? 'Alta' : 'Baja'
   };
 };
 
@@ -80,7 +85,7 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: "gpt-3.5-turbo",
       messages: [
-        { role: 'system', content: 'Eres un experto en creación de contenido viral para videos cortos y estrategias de marketing digital, con habilidades especiales en escritura de guiones narrados.' },
+        { role: 'system', content: 'Eres un experto en creación de contenido viral para videos cortos y estrategias de marketing digital, con habilidades especiales en escritura de guiones narrados. Tu tarea es generar ideas donde el título y el contenido estén estrechamente relacionados y sean coherentes entre sí.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: isPremium ? 2500 : 2000,
@@ -103,6 +108,13 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
     const idea = parseResponse(rawContent, isPremium);
 
     console.log('Idea procesada:', idea);
+
+    // Si la coherencia es baja, intentamos regenerar la idea
+    if (idea.coherencia === 'Baja') {
+      console.log('Coherencia baja detectada. Intentando regenerar la idea...');
+      return generarIdea(videoDetails, topComments, isPremium);
+    }
+
     return { success: true, idea };
 
   } catch (error) {

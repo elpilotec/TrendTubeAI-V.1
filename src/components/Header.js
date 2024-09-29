@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppBar, Toolbar, Typography, Box, Button, IconButton, Avatar, Menu, MenuItem, useMediaQuery, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
-import { AccountCircle, ExitToApp, Menu as MenuIcon, Brightness4, Brightness7 } from '@mui/icons-material';
+import { AccountCircle, ExitToApp, Menu as MenuIcon, Brightness4, Brightness7, Close as CloseIcon } from '@mui/icons-material';
 import logo from '../assets/logo.png';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
@@ -119,7 +119,7 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
               >
                 {user ? (
                   <>
-                    <MenuItem>
+                    <MenuItem onClick={handleClose}>
                       <Avatar sx={{ width: 24, height: 24, bgcolor: '#ff6666', color: 'white', marginRight: 1, fontSize: '0.75rem', fontWeight: 'bold' }}>
                         {initials}
                       </Avatar>
@@ -155,8 +155,8 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
                     <Typography variant="body2" sx={{ fontWeight: 'bold', marginRight: 1, color: 'white' }}>
                       {isPremium ? '(PRO)' : '(FREE)'}
                     </Typography>
-                    <IconButton color="inherit" onClick={onLogout} size="small">
-                      <ExitToApp />
+                    <IconButton color="inherit" onClick={onLogout} size="small" sx={{ marginLeft: 1 }}>
+                      <CloseIcon />
                     </IconButton>
                   </>
                 ) : (

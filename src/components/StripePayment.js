@@ -6,17 +6,15 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { Button, Box, Typography, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Button, Box, Typography, CircularProgress, Alert } from '@mui/material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
+const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl, user }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -29,22 +27,33 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
       return;
     }
 
+    if (!user || !user.id) {
+      setError('Usuario no válido. Por favor, inicia sesión nuevamente.');
+      setProcessing(false);
+      return;
+    }
+
     try {
-      console.log('Intentando conectar con:', apiUrl);
+      console.log('Iniciando proceso de pago para el usuario:', user.id);
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: amount }),
+        body: JSON.stringify({ amount: amount, userId: user.id }),
       });
+
+      console.log('Respuesta del servidor:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.text();
+        console.error('Error del servidor:', errorData);
         throw new Error(`Error del servidor: ${response.status} ${response.statusText}\n${errorData}`);
       }
 
       const data = await response.json();
+      console.log('Datos recibidos del servidor:', data);
 
       if (!data.clientSecret) {
         throw new Error('No se recibió el client secret del servidor');
@@ -57,19 +66,36 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
       });
 
       if (stripeError) {
+        console.error('Error de Stripe:', stripeError);
         throw new Error(stripeError.message);
       }
 
+      console.log('Estado del pago:', paymentIntent.status);
+
       if (paymentIntent.status === 'succeeded') {
-        onSuccess(paymentIntent);
+        console.log('Pago exitoso, confirmando suscripción...');
+        const confirmResponse = await fetch('/api/confirm-subscription', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: user.id, paymentIntentId: paymentIntent.id }),
+        });
+
+        if (confirmResponse.ok) {
+          console.log('Suscripción confirmada exitosamente');
+          onSuccess(paymentIntent);
+        } else {
+          const confirmErrorData = await confirmResponse.text();
+          console.error('Error al confirmar la suscripción:', confirmErrorData);
+          throw new Error('Error al confirmar la suscripción');
+        }
       } else {
-        throw new Error(`Estado del pago: ${paymentIntent.status}`);
+        throw new Error(`Estado del pago inesperado: ${paymentIntent.status}`);
       }
     } catch (err) {
-      console.error('Error en el pago:', err);
+      console.error('Error en el proceso de pago:', err);
       setError(err.message);
-      setDialogMessage(getErrorMessage(err));
-      setOpenDialog(true);
       if (typeof onError === 'function') {
         onError(err);
       } else {
@@ -78,28 +104,6 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
     } finally {
       setProcessing(false);
     }
-  };
-
-  const getErrorMessage = (error) => {
-    if (error.message.includes('Failed to fetch')) {
-      return 'No se pudo conectar con el servidor. Por favor, verifica tu conexión a internet y que el servidor esté en funcionamiento.';
-    }
-    switch (error.code) {
-      case 'card_declined':
-        return 'Tu tarjeta ha sido rechazada. Por favor, verifica los datos o intenta con otra tarjeta.';
-      case 'expired_card':
-        return 'Tu tarjeta ha expirado. Por favor, utiliza una tarjeta válida.';
-      case 'incorrect_cvc':
-        return 'El código de seguridad (CVC) es incorrecto. Por favor, verifica e intenta de nuevo.';
-      case 'processing_error':
-        return 'Hubo un error al procesar tu pago. Por favor, intenta de nuevo más tarde.';
-      default:
-        return 'Hubo un error en el proceso de pago. Por favor, verifica tus datos e intenta de nuevo.';
-    }
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
   };
 
   return (
@@ -139,27 +143,25 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl }) => {
       >
         Cancelar
       </Button>
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Error en el pago</DialogTitle>
-        <DialogContent>
-          <Typography>{dialogMessage}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cerrar</Button>
-        </DialogActions>
-      </Dialog>
     </form>
   );
 };
 
-const StripePayment = ({ amount, onSuccess, onError, onClose, apiUrl = 'http://localhost:3001/api/create-payment-intent' }) => {
+const StripePayment = ({ amount, onSuccess, onError, onClose, apiUrl = '/api/create-payment-intent', user }) => {
   return (
     <Elements stripe={stripePromise}>
       <Box sx={{ maxWidth: 400, margin: 'auto', mt: 4 }}>
         <Typography variant="h5" gutterBottom>
           Completa tu pago
         </Typography>
-        <CheckoutForm amount={amount} onSuccess={onSuccess} onError={onError} onClose={onClose} apiUrl={apiUrl} />
+        <CheckoutForm 
+          amount={amount} 
+          onSuccess={onSuccess} 
+          onError={onError || ((err) => console.error('Error de pago:', err))} 
+          onClose={onClose} 
+          apiUrl={apiUrl} 
+          user={user} 
+        />
       </Box>
     </Elements>
   );

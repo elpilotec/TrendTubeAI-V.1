@@ -4,8 +4,6 @@ import { Google as GoogleIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 
-const PREMIUM_TEST_EMAIL = 'cesarnicolasogando1@gmail.com';
-
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
@@ -15,7 +13,7 @@ export default function Login({ onLogin }) {
     onSuccess: async (tokenResponse) => {
       setIsLoading(true);
       try {
-        console.log('Redirect URI being used:', window.location.href);
+        console.log('Redirect URI being used:', window.location.href); // Captura el redirect_uri exacto
 
         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
@@ -26,30 +24,10 @@ export default function Login({ onLogin }) {
         }
 
         const userInfo = await userInfoResponse.json();
-        
-        // Verificar si el correo es el de prueba premium
-        const isPremium = userInfo.email === PREMIUM_TEST_EMAIL;
-
-        // Si es el correo de prueba, hacemos una llamada al servidor para registrarlo como premium
-        if (isPremium) {
-          const premiumResponse = await fetch('/api/register-premium-user', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: userInfo.email }),
-          });
-
-          if (!premiumResponse.ok) {
-            console.error('Error al registrar usuario premium:', await premiumResponse.text());
-          }
-        }
-
         onLogin({
           id: userInfo.sub,
           name: userInfo.name,
           email: userInfo.email,
-          isPremium: isPremium,
         });
         navigate('/');
       } catch (error) {
@@ -63,8 +41,8 @@ export default function Login({ onLogin }) {
       console.error('Login Failed:', errorResponse);
       setError('Login failed. Please try again.');
     },
-    flow: 'implicit',
-    redirectUri: 'https://www.trendtubeai.com',
+    flow: 'implicit',  // Opción para flujo implícito
+    redirectUri: 'https://www.trendtubeai.com',  // Especificamos el redirectUri para que coincida con Google Cloud Console
   });
 
   const handleClose = () => {
@@ -105,7 +83,7 @@ export default function Login({ onLogin }) {
         <CloseIcon />
       </IconButton>
       <Typography variant="h6" gutterBottom sx={{ mt: 2, textAlign: 'center' }}>
-        Inicia Sesión para Acceder a Todas las Funciones
+        Inicia sesión para Acceder a Todas las Funciones
       </Typography>
       <Button
         variant="contained"

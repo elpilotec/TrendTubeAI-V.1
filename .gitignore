@@ -14,7 +14,7 @@ cert.crt
 cert.key
 
 # Archivos de servidor
-server.js
+
 
 # JAR files
 bfg-*.jar

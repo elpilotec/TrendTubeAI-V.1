@@ -17,7 +17,7 @@ import {
 } from '@mui/icons-material';
 import StripePayment from './StripePayment';
 
-export default function PremiumSubscription({ onUpgrade, onClose }) {
+export default function PremiumSubscription({ onUpgrade, onClose, user }) {
   const [showStripePayment, setShowStripePayment] = useState(false);
 
   const handleSubscribe = () => {
@@ -80,6 +80,7 @@ export default function PremiumSubscription({ onUpgrade, onClose }) {
           amount={5}
           onSuccess={handlePaymentSuccess}
           onClose={handlePaymentClose}
+          user={user}
         />
       )}
     </Paper>
