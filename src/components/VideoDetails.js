@@ -2,16 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Typography, Button, Paper, Box, List, ListItem, ListItemText, CircularProgress, 
-  Snackbar, Container, AppBar, Toolbar, IconButton, useTheme, Dialog, DialogContent, DialogActions
+  Snackbar, Container, AppBar, Toolbar, IconButton, useTheme
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
 import { generarIdea } from '../services/ChatGPTServices';
-import AdSense from './AdSense';
-
-const AD_SLOT = process.env.REACT_APP_ADSENSE_SLOT;
+import { VideoDetails as VideoDetailsType, TopComment, GeneratedIdea } from '../types';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -78,21 +76,20 @@ interface VideoDetailsProps {
 }
 
 export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProps) {
-  const { videoId } = useParams();
+  const { videoId } = useParams<{ videoId: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
-  const [videoDetails, setVideoDetails] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [idea, setIdea] = useState(null);
+  const [videoDetails, setVideoDetails] = useState<VideoDetailsType | null>(null);
+  const [comments, setComments] = useState<TopComment[]>([]);
+  const [idea, setIdea] = useState<GeneratedIdea | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingIdea, setLoadingIdea] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [showAd, setShowAd] = useState(false);
-  const [isAdSenseVerified, setIsAdSenseVerified] = useState(false);
 
   const loadVideoDetails = useCallback(async () => {
+    if (!videoId) return;
     try {
       const details = await fetchVideoDetails(videoId);
       setVideoDetails(details);
@@ -111,49 +108,28 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
     loadVideoDetails();
   }, [loadVideoDetails]);
 
-  useEffect(() => {
-    const checkAdSenseVerification = async () => {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setIsAdSenseVerified(true);
-    };
-
-    checkAdSenseVerification();
-  }, []);
-
-  const handleGenerateIdea = () => {
+  const handleGenerateIdea = async () => {
+    if (!videoDetails) return;
     setLoadingIdea(true);
     setErrorMessage("");
     setIdea(null);
-    if (!isLoggedIn || (!isPremium && isAdSenseVerified)) {
-      setShowAd(true);
-    } else {
-      handleGenerateIdeaWithoutAd();
-    }
-  };
-
-  const handleGenerateIdeaWithoutAd = async () => {
     try {
       const result = await generarIdea(videoDetails, comments, isPremium);
-      if (result.success) {
+      if (result.success && result.idea) {
         setIdea(result.idea);
       } else {
         throw new Error(result.error || "Error desconocido al generar la idea.");
       }
     } catch (error) {
       console.error("Error generating idea:", error);
-      setErrorMessage(error.message || "Error al generar la idea. Por favor, intenta de nuevo.");
+      setErrorMessage(error instanceof Error ? error.message : "Error al generar la idea. Por favor, intenta de nuevo.");
       setSnackbarOpen(true);
     } finally {
       setLoadingIdea(false);
     }
   };
 
-  const handleCloseAd = () => {
-    setShowAd(false);
-    handleGenerateIdeaWithoutAd();
-  };
-
-  const copyToClipboard = (text, section) => {
+  const copyToClipboard = (text: string, section: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setSnackbarMessage(`${section} copiado al portapapeles`);
       setSnackbarOpen(true);
@@ -164,8 +140,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
     });
   };
 
-  const renderIdea = (idea) => {
-    if (!idea) return null;
+  const renderIdea = (idea: GeneratedIdea) => {
     return (
       <StyledPaper elevation={3}>
         <Box display="flex" alignItems="center" mb={2}>
@@ -248,7 +223,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
     );
   };
 
-  const formatViewCount = (count) => {
+  const formatViewCount = (count: number) => {
     if (count >= 1000000000) return (count / 1000000000).toFixed(1) + 'B';
     if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
     if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
@@ -264,7 +239,12 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
   }
 
   return (
-    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh' }}>
+    <Box sx={{
+      bgcolor: theme.palette.background.default,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar style={{ minHeight: '48px', padding: 0 }}>
           <SquareBackButton onClick={() => navigate(-1)} aria-label="back">
@@ -272,7 +252,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
           </SquareBackButton>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="md" sx={{ py: 3 }}>
+      <Container maxWidth="md" sx={{ py: 3, flex: 1 }}>
         {videoDetails && (
           <>
             <ThumbnailContainer mb={2}>
@@ -327,21 +307,6 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
           onClose={() => setSnackbarOpen(false)}
           message={snackbarMessage || errorMessage}
         />
-        {(!isLoggedIn || !isPremium) && isAdSenseVerified && (
-          <Dialog open={showAd} onClose={handleCloseAd} maxWidth="md" fullWidth>
-            <DialogContent>
-              <AdSense
-                adSlot={AD_SLOT}
-                style={{ display: 'block', textAlign: 'center' }}
-                format="auto"
-                responsive={true}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseAd}>Cerrar</Button>
-            </DialogActions>
-          </Dialog>
-        )}
       </Container>
     </Box>
   );
