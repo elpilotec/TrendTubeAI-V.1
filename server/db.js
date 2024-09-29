@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const mongoURI = 'mongodb+srv://cesarnicolasogando1:Nicolas-0618@clutertrendtube.1aqq9.mongodb.net/?retryWrites=true&w=majority&appName=clutertrendtube';
-    console.log('MongoDB URI:', mongoURI);
-    await mongoose.connect(mongoURI); // Elimina las opciones obsoletas
+    const REACT_APP_mongoURI = process.env.REACT_APP_MONGO_URI; // Leer la URI desde el .env
+    console.log('MongoDB URI:', REACT_APP_mongoURI);
+    await mongoose.connect(REACT_APP_mongoURI); // Conectar a MongoDB
     console.log('MongoDB connected successfully');
   } catch (err) {
     console.error('MongoDB connection error:', err);
