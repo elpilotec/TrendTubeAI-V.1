@@ -4,10 +4,8 @@ import { Google as GoogleIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://www.trendtubeai.com';
-
 export default function Login({ onLogin }) {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Hook para redirigir
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,58 +22,38 @@ export default function Login({ onLogin }) {
         }
 
         const userInfo = await userInfoResponse.json();
-        
-        // Send user info to your backend
-        const loginResponse = await fetch(`${API_URL}/api/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: userInfo.sub,
-            name: userInfo.name,
-            email: userInfo.email,
-          }),
-          credentials: 'include',
+        onLogin({
+          id: userInfo.sub,
+          name: userInfo.name,
+          email: userInfo.email,
         });
-
-        if (!loginResponse.ok) {
-          throw new Error('Failed to login on server');
-        }
-
-        const loginData = await loginResponse.json();
-
-        onLogin(loginData.user);
-        navigate('/');
+        navigate('/'); // Redirigir a la página de inicio después del login
       } catch (error) {
-        console.error('Login error:', error);
-        setError('Error durante el inicio de sesión. Por favor, intenta de nuevo.');
+        setError('Error durante el inicio de sesión.');
       } finally {
         setIsLoading(false);
       }
     },
     onError: (errorResponse) => {
-      console.error('Google login error:', errorResponse);
       setError('Fallo en el inicio de sesión. Intenta de nuevo.');
     },
-    redirectUri: `${API_URL}/auth/google/callback`,
+    redirectUri: 'https://www.trendtubeai.com',
   });
 
-  const handleCloseError = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+  const handleCloseError = () => {
     setError(null);
   };
 
+  // Función para manejar el botón de cerrar
   const handleClose = () => {
-    navigate('/');
+    navigate('/'); // Redirige a la página de inicio
   };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4, position: 'relative', p: 3, maxWidth: 400, mx: 'auto', backgroundColor: '#121212', borderRadius: 2 }}>
+      {/* Botón de cerrar en la esquina superior derecha */}
       <IconButton
-        onClick={handleClose}
+        onClick={handleClose} // Redirige al hacer clic
         sx={{ position: 'absolute', top: 8, right: 8, color: 'white' }}
         aria-label="close"
       >
@@ -94,11 +72,13 @@ export default function Login({ onLogin }) {
       >
         {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión con Google'}
       </Button>
-      <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseError}>
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      {error && (
+        <Snackbar open autoHideDuration={6000} onClose={handleCloseError}>
+          <Alert onClose={handleCloseError} severity="error">
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
     </Box>
   );
 }

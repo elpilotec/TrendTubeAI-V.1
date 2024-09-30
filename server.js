@@ -1,9 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const stripe = require('stripe')(process.env.REACT_APP_STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const connectDB = require('./server/db');
 const Subscription = require('./server/subscriptionModel');
 
@@ -14,36 +12,11 @@ connectDB()
   .then(() => console.log('Conexión exitosa con la base de datos'))
   .catch(err => console.error('Error conectando a la base de datos:', err));
 
-// Configuración de seguridad
-app.use(helmet());
-app.use(cors({
-  origin: process.env.REACT_APP_FRONTEND_URL || 'https://www.trendtubeai.com',
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
-// Configuración de rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100 // límite de 100 solicitudes por ventana por IP
-});
-app.use(limiter);
-
-// Middleware de autenticación
-const authenticateUser = (req, res, next) => {
-  // Implementa tu lógica de autenticación aquí
-  // Por ejemplo, verificar un token JWT
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'No autorizado' });
-  }
-  // Verifica el token y establece req.user
-  // Si la autenticación falla, devuelve un error 401
-  next();
-};
-
 // Endpoint para crear una intención de pago
-app.post('/api/create-payment-intent', authenticateUser, async (req, res) => {
+app.post('/api/create-payment-intent', async (req, res) => {
   try {
     const { amount, userId, customerInfo } = req.body;
     if (!amount || isNaN(amount) || !userId || !customerInfo) {
@@ -78,13 +51,12 @@ app.post('/api/create-payment-intent', authenticateUser, async (req, res) => {
 
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
-    console.error('Error al crear la intención de pago:', error);
-    res.status(500).json({ error: 'Error al crear la intención de pago' });
+    res.status(500).json({ error: 'Error al crear la intención de pago', details: error.message });
   }
 });
 
 // Endpoint para confirmar la suscripción tras el pago
-app.post('/api/confirm-subscription', authenticateUser, async (req, res) => {
+app.post('/api/confirm-subscription', async (req, res) => {
   try {
     const { userId, paymentIntentId } = req.body;
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -108,13 +80,12 @@ app.post('/api/confirm-subscription', authenticateUser, async (req, res) => {
       res.status(400).json({ error: 'El pago no se ha completado correctamente' });
     }
   } catch (error) {
-    console.error('Error al confirmar la suscripción:', error);
-    res.status(500).json({ error: 'Error al confirmar la suscripción' });
+    res.status(500).json({ error: 'Error al confirmar la suscripción', details: error.message });
   }
 });
 
 // Endpoint para verificar la suscripción del usuario
-app.get('/api/check-subscription/:userId', authenticateUser, async (req, res) => {
+app.get('/api/check-subscription/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     if (!userId) {
@@ -134,7 +105,6 @@ app.get('/api/check-subscription/:userId', authenticateUser, async (req, res) =>
       res.json({ isActive: false, message: 'No hay suscripción activa o ha caducado' });
     }
   } catch (error) {
-    console.error('Error al verificar la suscripción:', error);
     res.status(500).json({ error: 'Error interno del servidor al verificar la suscripción' });
   }
 });
@@ -142,7 +112,7 @@ app.get('/api/check-subscription/:userId', authenticateUser, async (req, res) =>
 // Middleware para manejar errores generales
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Error interno del servidor' });
+  res.status(500).json({ error: 'Error interno del servidor', details: err.message });
 });
 
 // Inicializar servidor
@@ -159,5 +129,5 @@ const startServer = (port) => {
   });
 };
 
-const PORT = process.env.REACT_APP_PORT || 3001;
+const PORT = process.env.PORT || 3001;
 startServer(PORT);

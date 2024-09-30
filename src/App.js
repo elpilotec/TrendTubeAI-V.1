@@ -18,23 +18,15 @@ import { Alert, Snackbar, CircularProgress } from '@mui/material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://www.trendtubeai.com';
-
 async function checkUserPremiumStatus(userId) {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await fetch(`${API_URL}/api/check-subscription/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
+    const response = await fetch(`/api/check-subscription/${userId}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new TypeError("Oops, we haven't got JSON!");
     }
     const data = await response.json();
     return data.isActive;
@@ -45,30 +37,8 @@ async function checkUserPremiumStatus(userId) {
 }
 
 async function upgradeToPremium(userId) {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await fetch(`${API_URL}/api/upgrade-to-premium`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ userId }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.success;
-  } catch (error) {
-    console.error('Error al actualizar a premium:', error);
-    return false;
-  }
+  console.log('Actualizando usuario a premium:', userId);
+  return true; // Simula una actualización exitosa
 }
 
 function App() {
@@ -94,9 +64,8 @@ function App() {
           throw new Error('Falta el ID de cliente de Google.');
         }
 
-        const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
-        if (token && storedUser) {
+        if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
           const userIsPremium = await checkUserPremiumStatus(parsedUser.id);
@@ -118,11 +87,10 @@ function App() {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  const handleLogin = async (userData, token) => {
+  const handleLogin = async (userData) => {
     try {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', token);
       const userIsPremium = await checkUserPremiumStatus(userData.id);
       setIsPremium(userIsPremium);
     } catch (error) {
@@ -136,7 +104,6 @@ function App() {
     setIsPremium(false);
     setShowPremiumSubscription(true);
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
   };
 
   const handleUpgradeToPremium = () => {

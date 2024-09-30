@@ -15,10 +15,9 @@ import {
   Box 
 } from '@mui/material';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://www.trendtubeai.com';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-const CheckoutForm = ({ amount, onSuccess, onError, onClose, user }) => {
+const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl, user }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
@@ -78,12 +77,9 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, user }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/create-payment-intent`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           amount: amount, 
           userId: user.id,
@@ -128,12 +124,9 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, user }) => {
       }
 
       if (paymentIntent.status === 'succeeded') {
-        const confirmResponse = await fetch(`${API_URL}/api/confirm-subscription`, {
+        const confirmResponse = await fetch('/api/confirm-subscription', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, paymentIntentId: paymentIntent.id }),
         });
 
@@ -141,7 +134,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, user }) => {
           onSuccess(paymentIntent);
         } else {
           const confirmErrorData = await confirmResponse.text();
-          throw new Error(`Error al confirmar la suscripción: ${confirmErrorData}`);
+          throw new Error('Error al confirmar la suscripción');
         }
       } else {
         throw new Error(`Estado del pago inesperado: ${paymentIntent.status}`);
@@ -242,10 +235,10 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, user }) => {
   );
 };
 
-const StripePayment = ({ amount, onSuccess, onError, onClose, user }) => {
+const StripePayment = ({ amount, onSuccess, onError, onClose, apiUrl = '/api/create-payment-intent', user }) => {
   return (
     <Elements stripe={stripePromise}>
-      <CheckoutForm amount={amount} onSuccess={onSuccess} onError={onError} onClose={onClose} user={user} />
+      <CheckoutForm amount={amount} onSuccess={onSuccess} onError={onError} onClose={onClose} apiUrl={apiUrl} user={user} />
     </Elements>
   );
 };
