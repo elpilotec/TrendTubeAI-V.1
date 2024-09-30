@@ -18,14 +18,34 @@ app.use(express.json());
 // Endpoint para crear una intención de pago
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
-    const { amount, userId } = req.body;
-    if (!amount || isNaN(amount) || !userId) {
-      return res.status(400).json({ error: 'Se requiere una cantidad válida y un ID de usuario' });
+    const { amount, userId, customerInfo } = req.body;
+    if (!amount || isNaN(amount) || !userId || !customerInfo) {
+      return res.status(400).json({ error: 'Se requiere una cantidad válida, un ID de usuario y la información del cliente' });
+    }
+
+    // Crear o actualizar el cliente en Stripe
+    let customer;
+    try {
+      customer = await stripe.customers.create({
+        email: customerInfo.email,
+        name: customerInfo.name,
+        address: {
+          line1: customerInfo.address,
+          city: customerInfo.city,
+          state: customerInfo.state,
+          postal_code: customerInfo.postalCode,
+          country: customerInfo.country,
+        },
+      });
+    } catch (stripeError) {
+      console.error('Error al crear el cliente en Stripe:', stripeError);
+      return res.status(500).json({ error: 'Error al procesar la información del cliente' });
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: parseInt(amount), // No multiplicar por 100 ya que amount ya está en centavos
+      amount: parseInt(amount),
       currency: 'usd',
+      customer: customer.id,
       metadata: { userId, subscriptionType: 'annual' },
     });
 
