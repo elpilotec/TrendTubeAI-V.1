@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -22,6 +21,13 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 async function checkUserPremiumStatus(userId) {
   try {
     const response = await fetch(`/api/check-subscription/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new TypeError("Oops, we haven't got JSON!");
+    }
     const data = await response.json();
     return data.isActive;
   } catch (error) {
@@ -54,7 +60,6 @@ function App() {
     const initializeApp = async () => {
       try {
         console.log('Inicializando la aplicación...');
-        console.log('ID de cliente de Google:', googleClientId);
         if (!googleClientId) {
           throw new Error('Falta el ID de cliente de Google.');
         }
@@ -101,7 +106,7 @@ function App() {
     localStorage.removeItem('user');
   };
 
-  const handleUpgradeToPremium = async () => {
+  const handleUpgradeToPremium = () => {
     setShowStripePayment(true);
   };
 
@@ -186,11 +191,12 @@ function App() {
                   <PremiumSubscription 
                     onUpgrade={handleUpgradeToPremium}
                     onClose={handleClosePremiumSubscription}
+                    user={user}
                   />
                 )}
                 {showStripePayment && (
                   <StripePayment
-                    amount={5}
+                    amount={500} // Enviar el monto en centavos
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                     onClose={handleCloseStripePayment}

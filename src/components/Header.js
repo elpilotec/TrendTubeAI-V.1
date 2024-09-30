@@ -74,6 +74,59 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
     handleClose();
   };
 
+  const menuItems = [
+    ...(user
+      ? [
+          {
+            key: 'user-info',
+            onClick: handleClose,
+            content: (
+              <>
+                <Avatar sx={{ width: 24, height: 24, bgcolor: '#ff6666', color: 'white', marginRight: 1, fontSize: '0.75rem', fontWeight: 'bold' }}>
+                  {initials}
+                </Avatar>
+                <Typography variant="body2">
+                  {user.email} {isPremium ? '(PRO)' : '(FREE)'}
+                </Typography>
+              </>
+            ),
+          },
+          {
+            key: 'logout',
+            onClick: handleLogout,
+            content: (
+              <>
+                <ExitToApp sx={{ marginRight: 1 }} />
+                Cerrar sesión
+              </>
+            ),
+          },
+        ]
+      : [
+          {
+            key: 'login',
+            component: Link,
+            to: '/login',
+            content: (
+              <>
+                <AccountCircle sx={{ marginRight: 1 }} />
+                Iniciar sesión
+              </>
+            ),
+          },
+        ]),
+    {
+      key: 'theme-toggle',
+      onClick: toggleDarkMode,
+      content: (
+        <>
+          {darkMode ? <Brightness7 sx={{ marginRight: 1 }} /> : <Brightness4 sx={{ marginRight: 1 }} />}
+          {darkMode ? 'Modo claro' : 'Modo oscuro'}
+        </>
+      ),
+    },
+  ];
+
   return (
     <StyledAppBar position="static">
       <StyledToolbar>
@@ -117,31 +170,11 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
                   },
                 }}
               >
-                {user ? (
-                  <>
-                    <MenuItem onClick={handleClose}>
-                      <Avatar sx={{ width: 24, height: 24, bgcolor: '#ff6666', color: 'white', marginRight: 1, fontSize: '0.75rem', fontWeight: 'bold' }}>
-                        {initials}
-                      </Avatar>
-                      <Typography variant="body2">
-                        {user.email} {isPremium ? '(PRO)' : '(FREE)'}
-                      </Typography>
-                    </MenuItem>
-                    <MenuItem onClick={handleLogout}>
-                      <ExitToApp sx={{ marginRight: 1 }} />
-                      Cerrar sesión
-                    </MenuItem>
-                  </>
-                ) : (
-                  <MenuItem component={Link} to="/login">
-                    <AccountCircle sx={{ marginRight: 1 }} />
-                    Iniciar sesión
+                {menuItems.map((item) => (
+                  <MenuItem key={item.key} onClick={item.onClick} component={item.component} to={item.to}>
+                    {item.content}
                   </MenuItem>
-                )}
-                <MenuItem onClick={toggleDarkMode}>
-                  {darkMode ? <Brightness7 sx={{ marginRight: 1 }} /> : <Brightness4 sx={{ marginRight: 1 }} />}
-                  {darkMode ? 'Modo claro' : 'Modo oscuro'}
-                </MenuItem>
+                ))}
               </Menu>
             </>
           ) : (

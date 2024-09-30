@@ -9,7 +9,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
 import { generarIdea } from '../services/ChatGPTServices';
-import { VideoDetails as VideoDetailsType, TopComment, GeneratedIdea } from '../types';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -70,18 +69,13 @@ const GenerateIdeaButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-interface VideoDetailsProps {
-  isPremium: boolean;
-  isLoggedIn: boolean;
-}
-
-export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProps) {
-  const { videoId } = useParams<{ videoId: string }>();
+export default function VideoDetails({ isPremium, isLoggedIn }) {
+  const { videoId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
-  const [videoDetails, setVideoDetails] = useState<VideoDetailsType | null>(null);
-  const [comments, setComments] = useState<TopComment[]>([]);
-  const [idea, setIdea] = useState<GeneratedIdea | null>(null);
+  const [videoDetails, setVideoDetails] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [idea, setIdea] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingIdea, setLoadingIdea] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -129,7 +123,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
     }
   };
 
-  const copyToClipboard = (text: string, section: string) => {
+  const copyToClipboard = (text, section) => {
     navigator.clipboard.writeText(text).then(() => {
       setSnackbarMessage(`${section} copiado al portapapeles`);
       setSnackbarOpen(true);
@@ -140,7 +134,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
     });
   };
 
-  const renderIdea = (idea: GeneratedIdea) => {
+  const renderIdea = (idea) => {
     return (
       <StyledPaper elevation={3}>
         <Box display="flex" alignItems="center" mb={2}>
@@ -223,7 +217,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
     );
   };
 
-  const formatViewCount = (count: number) => {
+  const formatViewCount = (count) => {
     if (count >= 1000000000) return (count / 1000000000).toFixed(1) + 'B';
     if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
     if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
@@ -285,7 +279,7 @@ export default function VideoDetails({ isPremium, isLoggedIn }: VideoDetailsProp
             </Box>
             {idea && renderIdea(idea)}
             <Typography variant="h6" gutterBottom sx={{ mt: 4, color: theme.palette.text.primary }} align="center">
-              Mejores Comentarios
+              Comentarios Relevantes
             </Typography>
             <List>
               {comments.map((comment, index) => (

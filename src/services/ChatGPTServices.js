@@ -1,9 +1,17 @@
+// src/services/ChatGPTServices.js
+
 import axios from 'axios';
-import { VideoDetails, TopComment, GeneratedIdea } from '../types';
 
 const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
 
-const generatePrompt = (videoDetails: VideoDetails, topComments: TopComment[], isPremium: boolean): string => {
+/**
+ * Generates a prompt for the AI based on video details and comments.
+ * @param {Object} videoDetails - The details of the video.
+ * @param {Array} topComments - The top comments of the video.
+ * @param {boolean} isPremium - Whether the user has a premium subscription.
+ * @returns {string} The generated prompt.
+ */
+const generatePrompt = (videoDetails, topComments, isPremium) => {
   if (!videoDetails || !topComments) {
     throw new Error('Faltan detalles del video o comentarios');
   }
@@ -48,7 +56,13 @@ ${isPremium ? 'Ideas para Contenido Adicional:\n- [Ideas]' : ''}
 `;
 };
 
-const parseResponse = (rawContent: string, isPremium: boolean): GeneratedIdea => {
+/**
+ * Parses the raw content from the AI response into a structured object.
+ * @param {string} rawContent - The raw content from the AI response.
+ * @param {boolean} isPremium - Whether the user has a premium subscription.
+ * @returns {Object} The parsed idea.
+ */
+const parseResponse = (rawContent, isPremium) => {
   const titulo = rawContent.match(/Título:\s*(.+)/)?.[1]?.trim() || 'Título no disponible';
   const guion = rawContent.match(/Guión Narrado:\s*(.+?)(?=\nHashtags:)/s)?.[1]?.trim() || 'Guión no disponible';
   const hashtags = rawContent.match(/Hashtags:\s*(.+)/)?.[1]?.split(/\s+/).filter(Boolean) || [];
@@ -71,7 +85,14 @@ const parseResponse = (rawContent: string, isPremium: boolean): GeneratedIdea =>
   };
 };
 
-export const generarIdea = async (videoDetails: VideoDetails, topComments: TopComment[], isPremium = false): Promise<{ success: boolean; idea?: GeneratedIdea; error?: string }> => {
+/**
+ * Generates an idea for a video based on the provided details and comments.
+ * @param {Object} videoDetails - The details of the video.
+ * @param {Array} topComments - The top comments of the video.
+ * @param {boolean} [isPremium=false] - Whether the user has a premium subscription.
+ * @returns {Promise<Object>} The generated idea or error information.
+ */
+export const generarIdea = async (videoDetails, topComments, isPremium = false) => {
   if (!apiKey) {
     throw new Error('API Key de OpenAI no encontrada. Verifica tu archivo .env');
   }
@@ -110,7 +131,7 @@ export const generarIdea = async (videoDetails: VideoDetails, topComments: TopCo
     console.error('Error al generar la idea:', error);
     return { 
       success: false,
-      error: error.message || 'No se pudo generar una idea para el video. Por favor, intenta de nuevo más tarde.',
+      error: error instanceof Error ? error.message : 'No se pudo generar una idea para el video. Por favor, intenta de nuevo más tarde.',
     };
   }
 };

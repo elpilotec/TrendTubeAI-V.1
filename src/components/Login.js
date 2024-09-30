@@ -5,7 +5,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login({ onLogin }) {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Hook para redirigir
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -13,8 +13,6 @@ export default function Login({ onLogin }) {
     onSuccess: async (tokenResponse) => {
       setIsLoading(true);
       try {
-        console.log('Redirect URI being used:', window.location.href); // Captura el redirect_uri exacto
-
         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
@@ -29,85 +27,59 @@ export default function Login({ onLogin }) {
           name: userInfo.name,
           email: userInfo.email,
         });
-        navigate('/');
+        navigate('/'); // Redirigir a la página de inicio después del login
       } catch (error) {
-        console.error('Error during login:', error);
-        setError('Failed to log in. Please try again.');
+        setError('Error durante el inicio de sesión.');
       } finally {
         setIsLoading(false);
       }
     },
     onError: (errorResponse) => {
-      console.error('Login Failed:', errorResponse);
-      setError('Login failed. Please try again.');
+      setError('Fallo en el inicio de sesión. Intenta de nuevo.');
     },
-    flow: 'implicit',  // Opción para flujo implícito
-    redirectUri: 'https://www.trendtubeai.com',  // Especificamos el redirectUri para que coincida con Google Cloud Console
+    redirectUri: 'https://www.trendtubeai.com',
   });
 
-  const handleClose = () => {
-    navigate('/');
-  };
-
-  const handleCloseError = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+  const handleCloseError = () => {
     setError(null);
   };
 
+  // Función para manejar el botón de cerrar
+  const handleClose = () => {
+    navigate('/'); // Redirige a la página de inicio
+  };
+
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      mt: 4, 
-      position: 'relative',
-      width: '100%',
-      maxWidth: '400px',
-      margin: '0 auto',
-      padding: '20px',
-      boxShadow: '0px 0px 10px rgba(0,0,0,0.1)',
-      borderRadius: '8px',
-    }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4, position: 'relative', p: 3, maxWidth: 400, mx: 'auto', backgroundColor: '#121212', borderRadius: 2 }}>
+      {/* Botón de cerrar en la esquina superior derecha */}
       <IconButton
-        onClick={handleClose}
-        sx={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          zIndex: 1,
-        }}
-        aria-label="Close"
+        onClick={handleClose} // Redirige al hacer clic
+        sx={{ position: 'absolute', top: 8, right: 8, color: 'white' }}
+        aria-label="close"
       >
         <CloseIcon />
       </IconButton>
-      <Typography variant="h6" gutterBottom sx={{ mt: 2, textAlign: 'center' }}>
-        Inicia sesión para Acceder a Todas las Funciones
+      
+      <Typography variant="h6" align="center" color="white">
+        Inicia sesión para acceder a todas las funciones
       </Typography>
       <Button
         variant="contained"
         startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <GoogleIcon />}
         onClick={() => login()}
         disabled={isLoading}
-        sx={{ 
-          mt: 2,
-          backgroundColor: '#DB4437',
-          '&:hover': {
-            backgroundColor: '#C53929',
-          },
-          '&:disabled': {
-            backgroundColor: '#BDBDBD',
-          },
-        }}
+        sx={{ mt: 2, backgroundColor: '#DB4437', color: 'white' }}
       >
         {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión con Google'}
       </Button>
-      <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseError}>
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      {error && (
+        <Snackbar open autoHideDuration={6000} onClose={handleCloseError}>
+          <Alert onClose={handleCloseError} severity="error">
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
     </Box>
   );
 }
+
