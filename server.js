@@ -8,16 +8,29 @@ const SavedIdea = require('./server/savedIdeaModel');
 
 const app = express();
 
+// Asegúrate de que esto esté antes de cualquier ruta
+app.use(cors({
+  origin: 'https://www.trendtubeai.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // Conectar a la base de datos
 connectDB()
   .then(() => console.log('Conexión exitosa con la base de datos'))
   .catch(err => console.error('Error conectando a la base de datos:', err));
 
-app.use(cors());
 app.use(express.json());
 
 // Endpoint para crear una intención de pago
 app.post('/api/create-payment-intent', async (req, res) => {
+  console.log('Received request:', req.body);
+  const { email } = req.body;
+  
+  console.log('Checking pro status for email:', email);
+  const isPro = await checkProStatus(email);
+  console.log('Is Pro?', isPro);
+
   try {
     const { amount, userId, customerInfo } = req.body;
     if (!amount || isNaN(amount) || !userId || !customerInfo) {
