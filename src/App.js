@@ -15,6 +15,7 @@ import PremiumSubscription from './components/PremiumSubscription';
 import StripePayment from './components/StripePayment';
 import { lightTheme, darkTheme } from './theme';
 import { Alert, Snackbar, CircularProgress } from '@mui/material';
+import SavedIdeas from './components/SavedIdeas';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
@@ -220,6 +221,12 @@ function App() {
                       />
                     } 
                   />
+                  {isPremium && (
+                    <Route 
+                      path="/saved-ideas" 
+                      element={<SavedIdeas user={user} />} 
+                    />
+                  )}
                 </Routes>
               </Box>
             </Box>

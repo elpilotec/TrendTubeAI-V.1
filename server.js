@@ -4,6 +4,7 @@ const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const connectDB = require('./server/db');
 const Subscription = require('./server/subscriptionModel');
+const SavedIdea = require('./server/savedIdeaModel');
 
 const app = express();
 
@@ -109,6 +110,44 @@ app.get('/api/check-subscription/:userId', async (req, res) => {
   }
 });
 
+// Endpoint para guardar una idea
+app.post('/api/save-idea', async (req, res) => {
+  try {
+    const { userId, idea, videoId } = req.body;
+    const savedIdea = new SavedIdea({
+      userId,
+      videoId,
+      ...idea
+    });
+    await savedIdea.save();
+    res.json({ success: true, message: 'Idea guardada con éxito' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al guardar la idea', details: error.message });
+  }
+});
+
+// Endpoint para obtener ideas guardadas
+app.get('/api/saved-ideas/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const savedIdeas = await SavedIdea.find({ userId });
+    res.json(savedIdeas);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener las ideas guardadas', details: error.message });
+  }
+});
+
+// Endpoint para eliminar una idea guardada
+app.delete('/api/delete-idea/:ideaId', async (req, res) => {
+  try {
+    const { ideaId } = req.params;
+    await SavedIdea.findByIdAndDelete(ideaId);
+    res.json({ success: true, message: 'Idea eliminada con éxito' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar la idea', details: error.message });
+  }
+});
+
 // Middleware para manejar errores generales
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
@@ -130,4 +169,9 @@ const startServer = (port) => {
 };
 
 const PORT = process.env.PORT || 3001;
-startServer(PORT);
+app.listen(PORT, () => {
+  console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+  console.log('Modo:', process.env.NODE_ENV);
+  console.log('URL del frontend:', process.env.FRONTEND_URL);
+  console.log('URL de la API:', process.env.REACT_APP_API_URL);
+});

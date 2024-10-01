@@ -1,25 +1,20 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, Box, Button, IconButton, Avatar, Menu, MenuItem, useMediaQuery, useTheme } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, useMediaQuery, useTheme, Menu, MenuItem, ListItemIcon, ListItemText, Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
-import { AccountCircle, ExitToApp, Menu as MenuIcon, Brightness4, Brightness7, Close as CloseIcon } from '@mui/icons-material';
+import { AccountCircle, ExitToApp, Menu as MenuIcon, Brightness4, Brightness7, Close as CloseIcon, Bookmark as BookmarkIcon } from '@mui/icons-material';
 import logo from '../assets/logo.png';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#ff6666',
-  boxShadow: 'none',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
 }));
 
 const StyledToolbar = styled(Toolbar)({
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '0 16px',
-  height: '64px',
 });
 
-const LogoContainer = styled(Box)({
+const LogoContainer = styled(Link)({
   display: 'flex',
   alignItems: 'center',
   textDecoration: 'none',
@@ -27,15 +22,8 @@ const LogoContainer = styled(Box)({
 });
 
 const Logo = styled('img')({
-  height: '90px',
-  marginRight: '8px',
-});
-
-const AppName = styled(Typography)({
-  fontSize: '1.5rem',
-  fontWeight: 'bold',
-  letterSpacing: '0.5px',
-  marginLeft: '-25px',
+  height: '40px',
+  marginRight: '10px',
 });
 
 const SettingsContainer = styled(Box)({
@@ -46,17 +34,10 @@ const SettingsContainer = styled(Box)({
 const UserInfo = styled(Box)({
   display: 'flex',
   alignItems: 'center',
-  marginRight: '16px',
+  marginRight: '10px',
 });
 
-const getInitials = (email) => {
-  if (!email) return '';
-  const parts = email.split('@')[0].split(/[._-]/);
-  return parts.map(part => part[0].toUpperCase()).join('');
-};
-
 export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPremium }) {
-  const initials = user ? getInitials(user.email) : '';
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [anchorEl, setAnchorEl] = useState(null);
@@ -69,83 +50,26 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    onLogout();
-    handleClose();
-  };
-
-  const menuItems = [
-    ...(user
-      ? [
-          {
-            key: 'user-info',
-            onClick: handleClose,
-            content: (
-              <>
-                <Avatar sx={{ width: 24, height: 24, bgcolor: '#ff6666', color: 'white', marginRight: 1, fontSize: '0.75rem', fontWeight: 'bold' }}>
-                  {initials}
-                </Avatar>
-                <Typography variant="body2">
-                  {user.email} {isPremium ? '(PRO)' : '(FREE)'}
-                </Typography>
-              </>
-            ),
-          },
-          {
-            key: 'logout',
-            onClick: handleLogout,
-            content: (
-              <>
-                <ExitToApp sx={{ marginRight: 1 }} />
-                Cerrar sesión
-              </>
-            ),
-          },
-        ]
-      : [
-          {
-            key: 'login',
-            component: Link,
-            to: '/login',
-            content: (
-              <>
-                <AccountCircle sx={{ marginRight: 1 }} />
-                Iniciar sesión
-              </>
-            ),
-          },
-        ]),
-    {
-      key: 'theme-toggle',
-      onClick: toggleDarkMode,
-      content: (
-        <>
-          {darkMode ? <Brightness7 sx={{ marginRight: 1 }} /> : <Brightness4 sx={{ marginRight: 1 }} />}
-          {darkMode ? 'Modo claro' : 'Modo oscuro'}
-        </>
-      ),
-    },
-  ];
+  const initials = user ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : '';
 
   return (
     <StyledAppBar position="static">
       <StyledToolbar>
-        <LogoContainer component={Link} to="/">
-          <Logo src={logo} alt="TrendTubeAI Logo" />
-          <AppName variant="h6">
-            TrendTubeAI
-          </AppName>
+        <LogoContainer to="/">
+          <Logo src={logo} alt="TrendTube AI Logo" />
+          <Typography variant="h6" component="div">
+            TrendTube AI
+          </Typography>
         </LogoContainer>
         <SettingsContainer>
           {isMobile ? (
             <>
               <IconButton
                 size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenu}
+                edge="start"
                 color="inherit"
+                aria-label="menu"
+                onClick={handleMenu}
               >
                 <MenuIcon />
               </IconButton>
@@ -163,18 +87,42 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
                 }}
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
-                PaperProps={{
-                  style: {
-                    backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#fff',
-                    color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-                  },
-                }}
               >
-                {menuItems.map((item) => (
-                  <MenuItem key={item.key} onClick={item.onClick} component={item.component} to={item.to}>
-                    {item.content}
+                {user && (
+                  <MenuItem onClick={handleClose}>
+                    <Avatar sx={{ mr: 2 }}>{initials}</Avatar>
+                    <ListItemText primary={user.name} secondary={isPremium ? '(PRO)' : '(FREE)'} />
                   </MenuItem>
-                ))}
+                )}
+                {isPremium && (
+                  <MenuItem component={Link} to="/saved-ideas" onClick={handleClose}>
+                    <ListItemIcon>
+                      <BookmarkIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Ideas Guardadas" />
+                  </MenuItem>
+                )}
+                <MenuItem onClick={toggleDarkMode}>
+                  <ListItemIcon>
+                    {darkMode ? <Brightness7 fontSize="small" /> : <Brightness4 fontSize="small" />}
+                  </ListItemIcon>
+                  <ListItemText primary={darkMode ? "Modo Claro" : "Modo Oscuro"} />
+                </MenuItem>
+                {user ? (
+                  <MenuItem onClick={onLogout}>
+                    <ListItemIcon>
+                      <ExitToApp fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Cerrar Sesión" />
+                  </MenuItem>
+                ) : (
+                  <MenuItem component={Link} to="/login" onClick={handleClose}>
+                    <ListItemIcon>
+                      <AccountCircle fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Iniciar Sesión" />
+                  </MenuItem>
+                )}
               </Menu>
             </>
           ) : (
@@ -207,6 +155,16 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
               <IconButton sx={{ ml: 1 }} onClick={toggleDarkMode} color="inherit">
                 {darkMode ? <Brightness7 /> : <Brightness4 />}
               </IconButton>
+              {isPremium && (
+                <Button 
+                  color="inherit" 
+                  component={Link} 
+                  to="/saved-ideas"
+                  startIcon={<BookmarkIcon />}
+                >
+                  Ideas Guardadas
+                </Button>
+              )}
             </>
           )}
         </SettingsContainer>

@@ -7,6 +7,8 @@ import {
 import { styled } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { fetchVideoDetails, fetchComments } from '../services/YouTubeServices';
 import { generarIdea } from '../services/ChatGPTServices';
 
@@ -69,7 +71,7 @@ const GenerateIdeaButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-export default function VideoDetails({ isPremium, isLoggedIn }) {
+export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -81,6 +83,13 @@ export default function VideoDetails({ isPremium, isLoggedIn }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Verifica que user e isPremium estén definidos
+  useEffect(() => {
+    console.log('User:', user);
+    console.log('Is Premium:', isPremium);
+  }, [user, isPremium]);
 
   const loadVideoDetails = useCallback(async () => {
     if (!videoId) return;
@@ -213,6 +222,16 @@ export default function VideoDetails({ isPremium, isLoggedIn }) {
             </List>
           </Box>
         )}
+        {isPremium && (
+          <Button
+            startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+            onClick={handleSaveIdea}
+            variant="outlined"
+            sx={{ mt: 2 }}
+          >
+            {isSaved ? 'Idea Guardada' : 'Guardar Idea'}
+          </Button>
+        )}
       </StyledPaper>
     );
   };
@@ -222,6 +241,53 @@ export default function VideoDetails({ isPremium, isLoggedIn }) {
     if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
     if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
     return count.toString();
+  };
+
+  const handleSaveIdea = async () => {
+    if (!isPremium) {
+      setSnackbarMessage("Esta función es solo para usuarios premium");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    const apiUrl = process.env.REACT_APP_API_URL;
+    if (!apiUrl) {
+      console.error("La URL de la API no está definida en las variables de entorno");
+      setSnackbarMessage("Error de configuración. Por favor, contacta al soporte.");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/api/save-idea`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          idea: idea,
+          videoId: videoId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSaved(true);
+        setSnackbarMessage("Idea guardada con éxito");
+      } else {
+        throw new Error(data.error || 'Error desconocido al guardar la idea');
+      }
+    } catch (error) {
+      console.error("Error saving idea:", error);
+      setSnackbarMessage(`Error al guardar la idea: ${error.message}`);
+    } finally {
+      setSnackbarOpen(true);
+    }
   };
 
   if (loading) {

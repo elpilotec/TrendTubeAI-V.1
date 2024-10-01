@@ -4,13 +4,6 @@ import axios from 'axios';
 
 const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
 
-/**
- * Generates a prompt for the AI based on video details and comments.
- * @param {Object} videoDetails - The details of the video.
- * @param {Array} topComments - The top comments of the video.
- * @param {boolean} isPremium - Whether the user has a premium subscription.
- * @returns {string} The generated prompt.
- */
 const generatePrompt = (videoDetails, topComments, isPremium) => {
   if (!videoDetails || !topComments) {
     throw new Error('Faltan detalles del video o comentarios');
@@ -21,10 +14,13 @@ const generatePrompt = (videoDetails, topComments, isPremium) => {
     .join(' ')
     .slice(0, 500);
 
-  return `
-Genera una idea innovadora y viral para un video corto de menos de 1 minuto basado en este video de YouTube:
+  const videoTopic = extractMainTopic(videoDetails.title, videoDetails.description);
 
-Título: "${videoDetails.title || 'No disponible'}"
+  return `
+Genera una idea innovadora y viral para un video corto de menos de 1 minuto inspirado en este video de YouTube:
+
+Tema principal: "${videoTopic}"
+Título original: "${videoDetails.title || 'No disponible'}"
 Descripción: "${videoDetails.description?.slice(0, 200) || 'No disponible'}"
 Duración: ${videoDetails.duration || 'No disponible'} segundos
 Vistas: ${videoDetails.viewCount || 'No disponible'}
@@ -32,36 +28,37 @@ Vistas: ${videoDetails.viewCount || 'No disponible'}
 Resumen de comentarios relevantes: "${commentSummary}"
 
 La idea DEBE incluir:
-1. Un título atractivo y descriptivo (máximo 60 caracteres) que capture la esencia del video original pero con un giro único.
+1. Un título atractivo y descriptivo (máximo 60 caracteres) que capture la esencia del tema pero con un giro único y relevante.
 2. Un guión narrado detallado (${isPremium ? '200-250' : '150-200'} palabras) estructurado así:
-   - Gancho inicial impactante (5-10 segundos)
-   - Desarrollo del contenido principal (40-45 segundos)
-   - Cierre fuerte o llamada a la acción (5-10 segundos)
-   - Incluye [instrucciones de entonación] y [pausas] entre corchetes
+   - Gancho inicial impactante (5-10 segundos) que capte inmediatamente la atención del espectador
+   - Desarrollo del contenido principal (40-45 segundos) que presente información de manera concisa, atractiva y original
+   - Cierre fuerte o llamada a la acción (5-10 segundos) que motive al espectador a interactuar o reflexionar sobre el tema
+   - Incluye [instrucciones de entonación], [pausas] y [efectos visuales o sonoros sugeridos] entre corchetes
 3. ${isPremium ? '7' : '5'} hashtags relevantes y populares.
-4. ${isPremium ? '4-5' : '2-3'} sugerencias específicas para la producción del video.
-${isPremium ? '5. 2-3 ideas para contenido adicional relacionado.' : ''}
+4. ${isPremium ? '4-5' : '2-3'} sugerencias específicas para la producción del video que lo hagan destacar y ser potencialmente viral.
+${isPremium ? '5. 2-3 ideas para contenido adicional relacionado que puedan formar una serie o campaña sobre el tema.' : ''}
 
-Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral. El guión debe ser fluido y atractivo, incorporando elementos del video original y los comentarios más relevantes.
-${isPremium ? 'Como solicitud premium, proporciona ideas más detalladas y de mayor calidad.' : ''}
+Asegúrate de que la idea sea única, creativa y tenga un alto potencial viral. El enfoque debe ser completamente nuevo y original, evitando copiar directamente el contenido del video inspirador. El guión debe ser fluido y atractivo, abordando el tema principal de una manera fresca y moderna.
+
+${isPremium ? 'Como solicitud premium, proporciona ideas más detalladas, de mayor calidad y con un enfoque estratégico para maximizar el engagement y la viralidad.' : ''}
 
 Formato requerido:
 Título: [Título de la idea]
 Guión Narrado:
-[Guión detallado con instrucciones de narración]
+[Guión detallado con instrucciones de narración, pausas y efectos visuales/sonoros]
 Hashtags: [hashtags]
 Sugerencias de Producción:
-- [Sugerencias]
-${isPremium ? 'Ideas para Contenido Adicional:\n- [Ideas]' : ''}
+- [Sugerencias detalladas y específicas]
+${isPremium ? 'Ideas para Contenido Adicional:\n- [Ideas estratégicas para una serie o campaña]' : ''}
 `;
 };
 
-/**
- * Parses the raw content from the AI response into a structured object.
- * @param {string} rawContent - The raw content from the AI response.
- * @param {boolean} isPremium - Whether the user has a premium subscription.
- * @returns {Object} The parsed idea.
- */
+const extractMainTopic = (title, description) => {
+  // Implementa la lógica para extraer el tema principal
+  // Por ahora, usaremos una versión simplificada
+  return title || 'Tema no disponible';
+};
+
 const parseResponse = (rawContent, isPremium) => {
   const titulo = rawContent.match(/Título:\s*(.+)/)?.[1]?.trim() || 'Título no disponible';
   const guion = rawContent.match(/Guión Narrado:\s*(.+?)(?=\nHashtags:)/s)?.[1]?.trim() || 'Guión no disponible';
@@ -85,13 +82,6 @@ const parseResponse = (rawContent, isPremium) => {
   };
 };
 
-/**
- * Generates an idea for a video based on the provided details and comments.
- * @param {Object} videoDetails - The details of the video.
- * @param {Array} topComments - The top comments of the video.
- * @param {boolean} [isPremium=false] - Whether the user has a premium subscription.
- * @returns {Promise<Object>} The generated idea or error information.
- */
 export const generarIdea = async (videoDetails, topComments, isPremium = false) => {
   if (!apiKey) {
     throw new Error('API Key de OpenAI no encontrada. Verifica tu archivo .env');

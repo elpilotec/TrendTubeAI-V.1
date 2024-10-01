@@ -49,7 +49,7 @@ export default function PremiumSubscription({ onUpgrade, onClose, user }) {
         Obtén acceso a funciones exclusivas durante un año completo por solo $5:
       </Typography>
       <List>
-        {['Generación de Ideas Mejorada', 'Soporte Prioritario', '365 Días de Acceso Premium'].map((feature) => (
+        {['Generación de Ideas Mejorada', 'Soporte Prioritario','Guardar Ideas Ilimitadas', '365 Días de Acceso Premium'].map((feature) => (
           <ListItem key={feature}>
             <ListItemIcon><CheckIcon /></ListItemIcon>
             <ListItemText primary={feature} />

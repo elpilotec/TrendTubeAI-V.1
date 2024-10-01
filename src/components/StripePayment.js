@@ -77,7 +77,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl, user }) => 
     }
 
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/create-payment-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -134,7 +134,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onClose, apiUrl, user }) => 
           onSuccess(paymentIntent);
         } else {
           const confirmErrorData = await confirmResponse.text();
-          throw new Error('Error al confirmar la suscripción');
+          throw new Error(`Error al confirmar la suscripción: ${confirmErrorData}`);
         }
       } else {
         throw new Error(`Estado del pago inesperado: ${paymentIntent.status}`);
