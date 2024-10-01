@@ -16,19 +16,29 @@ import StripePayment from './components/StripePayment';
 import { lightTheme, darkTheme } from './theme';
 import { Alert, Snackbar, CircularProgress } from '@mui/material';
 import SavedIdeas from './components/SavedIdeas';
+import API_URL from './config';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 async function checkUserPremiumStatus(userId) {
   try {
-    const response = await fetch(`/api/check-subscription/${userId}`);
+    const response = await fetch(`${API_URL}/api/check-subscription-status`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       throw new TypeError("Oops, we haven't got JSON!");
     }
+
     const data = await response.json();
     return data.isActive;
   } catch (error) {
