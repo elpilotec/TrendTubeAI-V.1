@@ -10,11 +10,14 @@ const app = express();
 
 // Asegúrate de que esto esté antes de cualquier ruta
 app.use(cors({
-  origin: 'https://www.trendtubeai.com',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: ['https://www.trendtubeai.com', 'http://localhost:3002', 'http://localhost:3003'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
+
+// Habilitar pre-flight en todas las rutas
+app.options('*', cors());
 
 // Conectar a la base de datos
 connectDB()
@@ -197,4 +200,25 @@ app.listen(PORT, () => {
   console.log('Modo:', process.env.NODE_ENV);
   console.log('URL del frontend:', process.env.FRONTEND_URL);
   console.log('URL de la API:', process.env.REACT_APP_API_URL);
+  console.log(`Modo: ${process.env.NODE_ENV}`);
+});
+
+// Endpoint para verificar el estado de la suscripción
+app.get('/api/check-subscription-status', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Aquí deberías implementar la lógica para verificar si el usuario tiene una suscripción activa
+    // Por ejemplo:
+    const subscription = await Subscription.findOne({ userId, status: 'active' });
+    const isActive = !!subscription;
+
+    res.json({ isActive });
+  } catch (error) {
+    console.error('Error checking subscription status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });

@@ -5,11 +5,7 @@ const connectDB = async () => {
     const MONGO_URI = process.env.MONGO_URI; // Mantenemos REACT_APP_MONGO_URI
     console.log('MongoDB URI:', MONGO_URI);
 
-    // Conexión con las opciones recomendadas
-    await mongoose.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(MONGO_URI);
 
     console.log('MongoDB conectado exitosamente');
   } catch (err) {

@@ -20,38 +20,6 @@ import API_URL from './config';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-async function checkUserPremiumStatus(userId) {
-  try {
-    const response = await fetch(`${API_URL}/api/check-subscription-status`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new TypeError("Oops, we haven't got JSON!");
-    }
-
-    const data = await response.json();
-    return data.isActive;
-  } catch (error) {
-    console.error('Error al verificar el estado de la suscripción:', error);
-    return false;
-  }
-}
-
-async function upgradeToPremium(userId) {
-  console.log('Actualizando usuario a premium:', userId);
-  return true; // Simula una actualización exitosa
-}
-
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
     const savedMode = localStorage.getItem('darkMode');
@@ -67,6 +35,34 @@ function App() {
 
   const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
+  const checkUserPremiumStatus = async (userId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/check-subscription-status?userId=${userId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setIsPremium(data.isActive);
+      return data.isActive;
+    } catch (error) {
+      console.error('Error al verificar el estado de la suscripción:', error);
+      return false;
+    }
+  };
+
+  const upgradeToPremium = async (userId) => {
+    try {
+      // Aquí normalmente harías una llamada a la API para actualizar el estado de la suscripción
+      // Por ahora, simularemos una actualización exitosa
+      console.log(`Actualizando usuario ${userId} a premium`);
+      await checkUserPremiumStatus(userId);
+      return true;
+    } catch (error) {
+      console.error('Error al actualizar a premium:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const initializeApp = async () => {
       try {
@@ -79,8 +75,7 @@ function App() {
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          const userIsPremium = await checkUserPremiumStatus(parsedUser.id);
-          setIsPremium(userIsPremium);
+          await checkUserPremiumStatus(parsedUser.id);
         }
         console.log('Aplicación inicializada con éxito');
       } catch (error) {
@@ -98,12 +93,17 @@ function App() {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
+  useEffect(() => {
+    if (user) {
+      checkUserPremiumStatus(user.id);
+    }
+  }, [user]);
+
   const handleLogin = async (userData) => {
     try {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      const userIsPremium = await checkUserPremiumStatus(userData.id);
-      setIsPremium(userIsPremium);
+      await checkUserPremiumStatus(userData.id);
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error);
       setError('No se pudo iniciar sesión. Por favor, intenta de nuevo.');
