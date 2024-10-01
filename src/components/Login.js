@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Typography, IconButton, Snackbar, Alert, CircularProgress, Paper } from '@mui/material';
+import { Button, Typography, Box, IconButton, Snackbar, Alert, CircularProgress } from '@mui/material';
 import { Google as GoogleIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
@@ -34,72 +34,68 @@ export default function Login({ onLogin }) {
         setIsLoading(false);
       }
     },
-    onError: () => {
+    onError: (errorResponse) => {
       setError('Fallo en el inicio de sesión. Intenta de nuevo.');
     },
     redirectUri: 'https://www.trendtubeai.com',
   });
 
-  const handleCloseError = () => setError(null);
-  const handleClose = () => navigate('/'); // Redirige a la página de inicio
+  const handleCloseError = () => {
+    setError(null);
+  };
+
+  // Función para manejar el botón de cerrar
+  const handleClose = () => {
+    navigate('/'); // Redirige a la página de inicio
+  };
 
   return (
-    <Paper elevation={3} sx={{
-      maxWidth: 320,
-      mx: 'auto',
-      mt: 4,
-      p: 3,
-      position: 'relative',
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      mt: 4, 
+      position: 'relative', 
+      p: 3, 
+      maxWidth: 400, 
+      mx: 'auto', 
+      backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#121212' : 'transparent',
       borderRadius: 2,
-      textAlign: 'center',
+      color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'black', // Add this line
     }}>
       {/* Botón de cerrar en la esquina superior derecha */}
       <IconButton
         onClick={handleClose} // Redirige al hacer clic
-        sx={{
-          position: 'absolute',
-          top: 8,
-          right: 8,
-          color: 'text.secondary',
+        sx={{ 
+          position: 'absolute', 
+          top: -8, // Moved up
+          right: -8, // Moved slightly to the right to compensate
+          color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'black'
         }}
         aria-label="close"
       >
-        <CloseIcon fontSize="small" />
+        <CloseIcon />
       </IconButton>
       
-      <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ mb: 1 }}>
-        Iniciar sesión
+      <Typography variant="body1" sx={{ mb: 2, textAlign: 'center' }}>
+        Inicia sesión para acceder a todas las funciones
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Accede a todas las funciones de TrendTube AI
-      </Typography>
-      
       <Button
         variant="contained"
-        fullWidth
         startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <GoogleIcon />}
         onClick={() => login()}
         disabled={isLoading}
-        sx={{
-          mt: 1,
-          backgroundColor: '#DB4437',
-          color: 'white',
-          '&:hover': {
-            backgroundColor: '#C23321',
-          },
-          py: 1,
-          textTransform: 'none',
-          borderRadius: 2,
-        }}
+        sx={{ mt: 2, backgroundColor: '#DB4437', color: 'white' }}
       >
-        {isLoading ? 'Iniciando sesión...' : 'Continuar con Google'}
+        {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión con Google'}
       </Button>
-      
-      <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseError}>
-        <Alert onClose={handleCloseError} severity="error" variant="filled">
-          {error}
-        </Alert>
-      </Snackbar>
-    </Paper>
+      {error && (
+        <Snackbar open autoHideDuration={6000} onClose={handleCloseError}>
+          <Alert onClose={handleCloseError} severity="error">
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
+    </Box>
   );
 }

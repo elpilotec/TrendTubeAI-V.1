@@ -28,7 +28,7 @@ app.use(express.json());
 
 // Middleware para manejar errores generales
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://www.trendtubeai.com');
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -207,18 +207,25 @@ app.listen(PORT, () => {
 app.get('/api/check-subscription-status', async (req, res) => {
   try {
     const { userId } = req.query;
+    console.log('Verificando suscripción para userId:', userId);
+
     if (!userId) {
+      console.log('Error: userId no proporcionado');
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    // Aquí deberías implementar la lógica para verificar si el usuario tiene una suscripción activa
-    // Por ejemplo:
     const subscription = await Subscription.findOne({ userId, status: 'active' });
-    const isActive = !!subscription;
+    console.log('Suscripción encontrada:', subscription);
 
-    res.json({ isActive });
+    if (subscription && subscription.endDate > new Date()) {
+      console.log('Suscripción activa encontrada');
+      res.json({ isActive: true });
+    } else {
+      console.log('No se encontró suscripción activa');
+      res.json({ isActive: false });
+    }
   } catch (error) {
-    console.error('Error checking subscription status:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error al verificar el estado de la suscripción:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
