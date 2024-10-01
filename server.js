@@ -8,7 +8,7 @@ const SavedIdea = require('./server/savedIdeaModel');
 
 const app = express();
 
-// Asegúrate de que esto esté antes de cualquier ruta
+// Configura CORS para permitir solicitudes desde tu dominio frontend
 app.use(cors({
   origin: ['https://www.trendtubeai.com', 'http://localhost:3002', 'http://localhost:3003'],
   methods: ['GET', 'POST', 'OPTIONS'],

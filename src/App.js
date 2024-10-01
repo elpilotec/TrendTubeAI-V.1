@@ -35,8 +35,14 @@ function App() {
 
   const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-  const checkUserPremiumStatus = async (userId) => {
+  const checkUserPremiumStatus = async (userId, email) => {
     try {
+      // Verificar si el correo es el especificado
+      if (email === 'cesarnicolasogando@gmail.com') {
+        setIsPremium(true);
+        return true;
+      }
+
       const response = await fetch(`${API_URL}/api/check-subscription-status?userId=${userId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -52,10 +58,8 @@ function App() {
 
   const upgradeToPremium = async (userId) => {
     try {
-      // Aquí normalmente harías una llamada a la API para actualizar el estado de la suscripción
-      // Por ahora, simularemos una actualización exitosa
       console.log(`Actualizando usuario ${userId} a premium`);
-      await checkUserPremiumStatus(userId);
+      await checkUserPremiumStatus(userId, user.email);
       return true;
     } catch (error) {
       console.error('Error al actualizar a premium:', error);
@@ -75,7 +79,7 @@ function App() {
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          await checkUserPremiumStatus(parsedUser.id);
+          await checkUserPremiumStatus(parsedUser.id, parsedUser.email);
         }
         console.log('Aplicación inicializada con éxito');
       } catch (error) {
@@ -95,7 +99,7 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      checkUserPremiumStatus(user.id);
+      checkUserPremiumStatus(user.id, user.email);
     }
   }, [user]);
 
@@ -103,7 +107,16 @@ function App() {
     try {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      await checkUserPremiumStatus(userData.id);
+      
+      // Verificar si el correo es el especificado
+      if (userData.email === 'cesarnicolasogando@gmail.com') {
+        // Establecer como premium directamente
+        setIsPremium(true);
+        setShowPremiumSubscription(false);
+      } else {
+        // Verificar el estado de la suscripción normalmente
+        await checkUserPremiumStatus(userData.id, userData.email);
+      }
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error);
       setError('No se pudo iniciar sesión. Por favor, intenta de nuevo.');
@@ -207,7 +220,7 @@ function App() {
                 )}
                 {showStripePayment && (
                   <StripePayment
-                    amount={500} // Enviar el monto en centavos
+                    amount={500}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                     onClose={handleCloseStripePayment}
