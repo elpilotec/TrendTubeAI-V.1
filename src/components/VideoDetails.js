@@ -258,6 +258,13 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
       return;
     }
 
+    console.log('Attempting to save idea to:', `${apiUrl}/api/save-idea`);
+    console.log('Payload:', JSON.stringify({
+      userId: user.id,
+      idea: idea,
+      videoId: videoId
+    }));
+
     try {
       const response = await fetch(`${apiUrl}/api/save-idea`, {
         method: 'POST',
@@ -271,8 +278,13 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
         }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const data = await response.json();

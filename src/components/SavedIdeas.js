@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, Paper, Box, CircularProgress, 
-  Container, IconButton
+  Container, IconButton, Button
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -46,6 +46,33 @@ export default function SavedIdeas({ user }) {
     }
   };
 
+  const handleSaveIdea = async (idea) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/save-idea`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          idea: idea,
+          videoId: idea.videoId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Idea saved successfully:', result);
+      // Podrías actualizar el estado aquí si es necesario
+    } catch (error) {
+      console.error("Error saving idea:", error);
+      setError("No se pudo guardar la idea");
+    }
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -64,9 +91,12 @@ export default function SavedIdeas({ user }) {
           <Paper key={idea._id} elevation={3} sx={{ mb: 2, p: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">{idea.titulo}</Typography>
-              <IconButton onClick={() => handleDeleteIdea(idea._id)}>
-                <DeleteIcon />
-              </IconButton>
+              <Box>
+                <IconButton onClick={() => handleDeleteIdea(idea._id)}>
+                  <DeleteIcon />
+                </IconButton>
+                <Button onClick={() => handleSaveIdea(idea)}>Guardar de nuevo</Button>
+              </Box>
             </Box>
             <Typography variant="body1">{idea.guion}</Typography>
             <Typography variant="body2" sx={{ mt: 1 }}>Hashtags: {idea.hashtags.join(', ')}</Typography>

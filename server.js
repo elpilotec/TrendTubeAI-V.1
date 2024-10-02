@@ -10,8 +10,8 @@ const app = express();
 
 // Configura CORS para permitir solicitudes desde tu dominio frontend
 app.use(cors({
-  origin: ['https://www.trendtubeai.com', 'http://localhost:3002', 'http://localhost:3003'],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin: ['https://www.trendtubeai.com', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
@@ -138,6 +138,7 @@ app.get('/api/check-subscription/:userId', async (req, res) => {
 
 // Endpoint para guardar una idea
 app.post('/api/save-idea', async (req, res) => {
+  console.log('Received save idea request:', req.body);
   try {
     const { userId, idea, videoId } = req.body;
     const savedIdea = new SavedIdea({
@@ -146,8 +147,10 @@ app.post('/api/save-idea', async (req, res) => {
       ...idea
     });
     await savedIdea.save();
+    console.log('Idea saved successfully');
     res.json({ success: true, message: 'Idea guardada con éxito' });
   } catch (error) {
+    console.error('Error saving idea:', error);
     res.status(500).json({ error: 'Error al guardar la idea', details: error.message });
   }
 });

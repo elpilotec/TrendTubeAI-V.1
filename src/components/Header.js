@@ -22,7 +22,7 @@ const LogoContainer = styled(Link)({
 });
 
 const Logo = styled('img')({
-  height: '40px',
+  height: '50px',
   marginRight: '10px',
 });
 
