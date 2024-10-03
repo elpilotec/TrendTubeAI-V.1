@@ -11,9 +11,10 @@ const app = express();
 
 // Configura CORS
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3002'],
+  origin: ['http://localhost:3000', 'http://localhost:3002','https://www.trendtubeai.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Esto permitirá que las cookies se envíen correctamente entre dominios
 }));
 
 // Habilitar pre-flight en todas las rutas
@@ -28,7 +29,7 @@ app.use(express.json());
 
 // Middleware para manejar errores generales
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Origin', req.headers.origin||'https://www.trendtubeai.com');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
