@@ -1,16 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.REACT_APPSTRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.REACT_APP_STRIPE_SECRET_KEY);
 const connectDB = require('./server/db');
 const Subscription = require('./server/subscriptionModel');
 const SavedIdea = require('./server/savedIdeaModel');
+const UserCredit = require('./server/userCreditModel');
 
 const app = express();
 
 // Configura CORS
 app.use(cors({
-  origin: 'http://localhost:3000', // Reemplaza esto con el origen de tu aplicación en producción
+  origin: ['http://localhost:3000', 'http://localhost:3002'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -229,5 +230,48 @@ app.get('/api/check-subscription-status', async (req, res) => {
   } catch (error) {
     console.error('Error al verificar el estado de la suscripción:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Añadir este endpoint para verificar y actualizar créditos
+app.post('/api/check-credits', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    let userCredit = await UserCredit.findOne({ userId });
+
+    if (!userCredit) {
+      userCredit = new UserCredit({ userId });
+      await userCredit.save();
+    }
+
+    if (userCredit.isPremium) {
+      res.json({ canGenerate: true, credits: 'unlimited' });
+    } else if (userCredit.credits > 0) {
+      userCredit.credits -= 1;
+      await userCredit.save();
+      res.json({ canGenerate: true, credits: userCredit.credits });
+    } else {
+      res.json({ canGenerate: false, credits: 0 });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error al verificar créditos' });
+  }
+});
+
+// Modificar el endpoint de confirm-subscription para actualizar a premium
+app.post('/api/confirm-subscription', async (req, res) => {
+  // ... código existente ...
+
+  if (paymentIntent.status === 'succeeded') {
+    // ... código existente ...
+
+    // Actualizar el estado premium del usuario
+    await UserCredit.findOneAndUpdate(
+      { userId },
+      { isPremium: true },
+      { upsert: true, new: true }
+    );
+
+    // ... resto del código ...
   }
 });

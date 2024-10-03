@@ -90,6 +90,8 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  const [credits, setCredits] = useState(isPremium ? 'unlimited' : 10);
+  const [canGenerate, setCanGenerate] = useState(true);
 
   // Verifica que user e isPremium estén definidos
   useEffect(() => {
@@ -124,23 +126,47 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
       return;
     }
     if (!videoDetails) return;
-    setLoadingIdea(true);
-    setErrorMessage("");
-    setIdea(null);
+
     try {
-      const result = await generarIdea(videoDetails, comments, isPremium);
-      if (result.success && result.idea) {
-        setIdea(result.idea);
-        setIsSaved(false); // Resetear el estado de guardado para la nueva idea
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/check-credits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await response.json();
+
+      if (data.canGenerate) {
+        setCredits(data.credits);
+        setCanGenerate(true);
+        setLoadingIdea(true);
+        setErrorMessage("");
+        setIdea(null);
+        try {
+          const result = await generarIdea(videoDetails, comments, isPremium);
+          if (result.success && result.idea) {
+            setIdea(result.idea);
+            setIsSaved(false); // Resetear el estado de guardado para la nueva idea
+          } else {
+            throw new Error(result.error || "Error desconocido al generar la idea.");
+          }
+        } catch (error) {
+          console.error("Error generating idea:", error);
+          setErrorMessage(error instanceof Error ? error.message : "Error al generar la idea. Por favor, intenta de nuevo.");
+          setSnackbarOpen(true);
+        } finally {
+          setLoadingIdea(false);
+        }
       } else {
-        throw new Error(result.error || "Error desconocido al generar la idea.");
+        setCanGenerate(false);
+        setSnackbarMessage("No tienes créditos suficientes. Actualiza a premium para ideas ilimitadas.");
+        setSnackbarOpen(true);
       }
     } catch (error) {
-      console.error("Error generating idea:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Error al generar la idea. Por favor, intenta de nuevo.");
+      console.error("Error checking credits:", error);
+      setSnackbarMessage("Error al verificar créditos. Intenta de nuevo.");
       setSnackbarOpen(true);
-    } finally {
-      setLoadingIdea(false);
     }
   };
 
@@ -363,10 +389,12 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
                   <GenerateIdeaButton
                     variant="contained"
                     onClick={handleGenerateIdea}
-                    disabled={loadingIdea}
+                    disabled={loadingIdea || !canGenerate}
                     sx={{ maxWidth: '300px', width: '100%' }}
                   >
-                    {loadingIdea ? 'Generando Idea...' : idea ? 'Generar Otra Idea' : 'Generar Idea Para Video'}
+                    {loadingIdea ? 'Generando Idea...' : 
+                     !canGenerate ? 'Sin Créditos' :
+                     idea ? 'Generar Otra Idea' : 'Generar Idea Para Video'}
                   </GenerateIdeaButton>
                 </Box>
               ) : (
@@ -416,6 +444,11 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
         onClose={() => setSnackbarOpen(false)}
         message={snackbarMessage || errorMessage}
       />
+      {!isPremium && (
+        <Typography variant="body2" align="center">
+          Créditos restantes: {credits}
+        </Typography>
+      )}
     </Box>
   );
 }
