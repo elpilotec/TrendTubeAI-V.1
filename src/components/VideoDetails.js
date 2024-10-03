@@ -37,7 +37,7 @@ const ViewButton = styled(Button)(({ theme }) => ({
   top: 8,
   right: 8,
   backgroundColor: 'rgba(0,0,0,0.6)',
-  color: theme.palette.mode === 'dark' ? theme.palette.error.light : theme.palette.error.main,
+  color: theme.palette.common.white,
   '&:hover': {
     backgroundColor: 'rgba(0,0,0,0.8)',
   },
@@ -69,6 +69,12 @@ const GenerateIdeaButton = styled(Button)(({ theme }) => ({
     backgroundColor: theme.palette.action.disabledBackground,
     color: theme.palette.action.disabled,
   },
+}));
+
+const MainContent = styled(Box)(({ theme }) => ({
+  flexGrow: 1,
+  overflow: 'auto',
+  padding: theme.spacing(3),
 }));
 
 export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
@@ -318,10 +324,10 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
 
   return (
     <Box sx={{
-      bgcolor: theme.palette.background.default,
-      minHeight: '100vh',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      height: '100vh',
+      overflow: 'hidden',
     }}>
       <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar style={{ minHeight: '48px', padding: 0 }}>
@@ -330,84 +336,86 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
           </SquareBackButton>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="md" sx={{ py: 3, flex: 1 }}>
-        {videoDetails && (
-          <>
-            <ThumbnailContainer mb={2}>
-              <img src={videoDetails.thumbnail} alt={videoDetails.title} style={{ width: '100%', maxHeight: 450, objectFit: 'cover' }} />
-              <ViewButton
-                variant="text"
-                size="small"
-                onClick={() => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank')}
-              >
-                Ver
-              </ViewButton>
-              <Box position="absolute" bottom={8} right={8} bgcolor="rgba(0,0,0,0.6)" p={1} borderRadius={1}>
-                <Typography variant="body2" color="white">
-                  {formatViewCount(videoDetails.viewCount)} vistas
-                </Typography>
-              </Box>
-            </ThumbnailContainer>
-            <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2, color: theme.palette.text.primary }}>
-              {videoDetails.title}
-            </Typography>
-            {user ? (
-              <Box display="flex" justifyContent="center" mb={2}>
-                <GenerateIdeaButton
-                  variant="contained"
-                  onClick={handleGenerateIdea}
-                  disabled={loadingIdea}
-                  sx={{ maxWidth: '300px', width: '100%' }}
+      <MainContent>
+        <Container maxWidth="md">
+          {videoDetails && (
+            <>
+              <ThumbnailContainer mb={2}>
+                <img src={videoDetails.thumbnail} alt={videoDetails.title} style={{ width: '100%', maxHeight: 450, objectFit: 'cover' }} />
+                <ViewButton
+                  variant="text"
+                  size="small"
+                  onClick={() => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank')}
                 >
-                  {loadingIdea ? 'Generando Idea...' : idea ? 'Generar Otra Idea' : 'Generar Idea Para Video'}
-                </GenerateIdeaButton>
-              </Box>
-            ) : (
-              <Box textAlign="center" mt={2}>
-                <Typography variant="body1" gutterBottom>
-                  Debes iniciar sesión para generar ideas.
-                </Typography>
-                <Button
-                  component={RouterLink}
-                  to="/login"
-                  variant="contained"
-                  color="primary"
-                  sx={{ mt: 1 }}
-                >
-                  Iniciar Sesión
-                </Button>
-              </Box>
-            )}
-            {user && idea && renderIdea(idea)}
-            {errorMessage && (
-              <Typography color="error" align="center" mt={2}>
-                {errorMessage}
+                  Ver
+                </ViewButton>
+                <Box position="absolute" bottom={8} right={8} bgcolor="rgba(0,0,0,0.6)" p={1} borderRadius={1}>
+                  <Typography variant="body2" color="white">
+                    {formatViewCount(videoDetails.viewCount)} vistas
+                  </Typography>
+                </Box>
+              </ThumbnailContainer>
+              <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2, color: theme.palette.text.primary }}>
+                {videoDetails.title}
               </Typography>
-            )}
-            <Typography variant="h6" gutterBottom sx={{ mt: 4, color: theme.palette.text.primary }} align="center">
-              Comentarios Relevantes
-            </Typography>
-            <List>
-              {comments.map((comment, index) => (
-                <ListItem key={index} divider>
-                  <ListItemText
-                    primary={comment.author}
-                    secondary={comment.text}
-                    primaryTypographyProps={{ color: theme.palette.text.primary }}
-                    secondaryTypographyProps={{ color: theme.palette.text.secondary }}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </>
-        )}
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={() => setSnackbarOpen(false)}
-          message={snackbarMessage || errorMessage}
-        />
-      </Container>
+              {user ? (
+                <Box display="flex" justifyContent="center" mb={2}>
+                  <GenerateIdeaButton
+                    variant="contained"
+                    onClick={handleGenerateIdea}
+                    disabled={loadingIdea}
+                    sx={{ maxWidth: '300px', width: '100%' }}
+                  >
+                    {loadingIdea ? 'Generando Idea...' : idea ? 'Generar Otra Idea' : 'Generar Idea Para Video'}
+                  </GenerateIdeaButton>
+                </Box>
+              ) : (
+                <Box textAlign="center" mt={2}>
+                  <Typography variant="body1" gutterBottom>
+                    Debes iniciar sesión para generar ideas.
+                  </Typography>
+                  <Button
+                    component={RouterLink}
+                    to="/login"
+                    variant="contained"
+                    color="primary"
+                    sx={{ mt: 1 }}
+                  >
+                    Iniciar Sesión
+                  </Button>
+                </Box>
+              )}
+              {user && idea && renderIdea(idea)}
+              {errorMessage && (
+                <Typography color="error" align="center" mt={2}>
+                  {errorMessage}
+                </Typography>
+              )}
+              <Typography variant="h6" gutterBottom sx={{ mt: 4, color: theme.palette.text.primary }} align="center">
+                Comentarios Relevantes
+              </Typography>
+              <List>
+                {comments.map((comment, index) => (
+                  <ListItem key={index} divider>
+                    <ListItemText
+                      primary={comment.author}
+                      secondary={comment.text}
+                      primaryTypographyProps={{ color: theme.palette.text.primary }}
+                      secondaryTypographyProps={{ color: theme.palette.text.secondary }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </>
+          )}
+        </Container>
+      </MainContent>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage || errorMessage}
+      />
     </Box>
   );
 }
