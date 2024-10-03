@@ -66,11 +66,11 @@ const parseResponse = (rawContent, isPremium) => {
   
   const sugerenciasMatch = rawContent.match(/Sugerencias de Producción:\s*([\s\S]+?)(?=\n(?:Ideas para Contenido Adicional:|$))/);
   const sugerenciasProduccion = sugerenciasMatch
-    ? sugerenciasMatch[1].trim().split('\n').map(item => item.trim().replace(/^-\s*/, ''))
+    ? sugerenciasMatch[1].trim().split('\n').map(item => item.trim().replace(/^-\s*/, '')).filter(Boolean)
     : [];
 
   const ideasAdicionales = isPremium
-    ? (rawContent.match(/Ideas para Contenido Adicional:\s*([\s\S]+)$/)?.[1]?.trim().split('\n').map(item => item.trim().replace(/^-\s*/, '')) || [])
+    ? (rawContent.match(/Ideas para Contenido Adicional:\s*([\s\S]+)$/)?.[1]?.trim().split('\n').map(item => item.trim().replace(/^-\s*/, '')).filter(Boolean) || [])
     : [];
 
   return {
@@ -102,7 +102,7 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      timeout: 30000
+      timeout: 60000 // Aumentado a 60 segundos para dar más tiempo a la API
     });
 
     if (!response.data?.choices?.[0]?.message?.content) {
@@ -114,6 +114,11 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
 
     const idea = parseResponse(rawContent, isPremium);
 
+    // Validación adicional de la idea generada
+    if (!validateIdea(idea, isPremium)) {
+      throw new Error('La idea generada no cumple con los requisitos mínimos');
+    }
+
     console.log('Idea procesada:', idea);
     return { success: true, idea };
 
@@ -124,4 +129,14 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
       error: error instanceof Error ? error.message : 'No se pudo generar una idea para el video. Por favor, intenta de nuevo más tarde.',
     };
   }
+};
+
+// Función para validar la idea generada
+const validateIdea = (idea, isPremium) => {
+  if (!idea.titulo || idea.titulo === 'Título no disponible') return false;
+  if (!idea.guion || idea.guion === 'Guión no disponible') return false;
+  if (!idea.hashtags || idea.hashtags.length < (isPremium ? 7 : 5)) return false;
+  if (!idea.sugerenciasProduccion || idea.sugerenciasProduccion.length < (isPremium ? 4 : 2)) return false;
+  if (isPremium && (!idea.ideasAdicionales || idea.ideasAdicionales.length < 2)) return false;
+  return true;
 };

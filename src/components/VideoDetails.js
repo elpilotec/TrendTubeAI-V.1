@@ -125,6 +125,7 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
       const result = await generarIdea(videoDetails, comments, isPremium);
       if (result.success && result.idea) {
         setIdea(result.idea);
+        setIsSaved(false); // Resetear el estado de guardado para la nueva idea
       } else {
         throw new Error(result.error || "Error desconocido al generar la idea.");
       }
@@ -358,7 +359,7 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
                   disabled={loadingIdea}
                   sx={{ maxWidth: '300px', width: '100%' }}
                 >
-                  {loadingIdea ? 'Generando Idea...' : 'Generar Idea Para Video'}
+                  {loadingIdea ? 'Generando Idea...' : idea ? 'Generar Otra Idea' : 'Generar Idea Para Video'}
                 </GenerateIdeaButton>
               </Box>
             ) : (
@@ -378,6 +379,11 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
               </Box>
             )}
             {user && idea && renderIdea(idea)}
+            {errorMessage && (
+              <Typography color="error" align="center" mt={2}>
+                {errorMessage}
+              </Typography>
+            )}
             <Typography variant="h6" gutterBottom sx={{ mt: 4, color: theme.palette.text.primary }} align="center">
               Comentarios Relevantes
             </Typography>
