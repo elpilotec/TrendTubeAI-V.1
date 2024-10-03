@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { 
   Typography, Button, Paper, Box, List, ListItem, ListItemText, CircularProgress, 
   Snackbar, Container, AppBar, Toolbar, IconButton, useTheme
@@ -112,6 +112,11 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
   }, [loadVideoDetails]);
 
   const handleGenerateIdea = async () => {
+    if (!user) {
+      setSnackbarMessage("Debes iniciar sesión para generar ideas.");
+      setSnackbarOpen(true);
+      return;
+    }
     if (!videoDetails) return;
     setLoadingIdea(true);
     setErrorMessage("");
@@ -345,17 +350,34 @@ export default function VideoDetails({ user, isPremium, onUpgradeToPremium }) {
             <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2, color: theme.palette.text.primary }}>
               {videoDetails.title}
             </Typography>
-            <Box display="flex" justifyContent="center" mb={2}>
-              <GenerateIdeaButton
-                variant="contained"
-                onClick={handleGenerateIdea}
-                disabled={loadingIdea}
-                sx={{ maxWidth: '300px', width: '100%' }}
-              >
-                {loadingIdea ? 'Generando Idea...' : 'Generar Idea Para Video'}
-              </GenerateIdeaButton>
-            </Box>
-            {idea && renderIdea(idea)}
+            {user ? (
+              <Box display="flex" justifyContent="center" mb={2}>
+                <GenerateIdeaButton
+                  variant="contained"
+                  onClick={handleGenerateIdea}
+                  disabled={loadingIdea}
+                  sx={{ maxWidth: '300px', width: '100%' }}
+                >
+                  {loadingIdea ? 'Generando Idea...' : 'Generar Idea Para Video'}
+                </GenerateIdeaButton>
+              </Box>
+            ) : (
+              <Box textAlign="center" mt={2}>
+                <Typography variant="body1" gutterBottom>
+                  Debes iniciar sesión para generar ideas.
+                </Typography>
+                <Button
+                  component={RouterLink}
+                  to="/login"
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 1 }}
+                >
+                  Iniciar Sesión
+                </Button>
+              </Box>
+            )}
+            {user && idea && renderIdea(idea)}
             <Typography variant="h6" gutterBottom sx={{ mt: 4, color: theme.palette.text.primary }} align="center">
               Comentarios Relevantes
             </Typography>
