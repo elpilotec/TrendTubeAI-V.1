@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.REACT_APPSTRIPE_SECRET_KEY);
 const connectDB = require('./server/db');
 const Subscription = require('./server/subscriptionModel');
 const SavedIdea = require('./server/savedIdeaModel');
@@ -10,7 +10,7 @@ const app = express();
 
 // Configura CORS para permitir solicitudes desde tu dominio frontend
 app.use(cors({
-  origin: ['https://www.trendtubeai.com', 'http://localhost:3000'],
+  origin: ['https://www.trendtubeai.com', 'http://localhost:3000', 'http://localhost:3002'],
   methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
