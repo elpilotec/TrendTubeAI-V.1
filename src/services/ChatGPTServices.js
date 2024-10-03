@@ -73,6 +73,16 @@ const parseResponse = (rawContent, isPremium) => {
     ? (rawContent.match(/Ideas para Contenido Adicional:\s*([\s\S]+)$/)?.[1]?.trim().split('\n').map(item => item.trim().replace(/^-\s*/, '')).filter(Boolean) || [])
     : [];
 
+  // Aseguramos que haya al menos una sugerencia de producción
+  if (sugerenciasProduccion.length === 0) {
+    sugerenciasProduccion.push('Mejora la iluminación y el sonido del video');
+  }
+
+  // Aseguramos que haya al menos 3 hashtags para usuarios no premium
+  while (hashtags.length < 3) {
+    hashtags.push(`#trending${hashtags.length + 1}`);
+  }
+
   return {
     titulo,
     guion,
@@ -135,8 +145,17 @@ export const generarIdea = async (videoDetails, topComments, isPremium = false) 
 const validateIdea = (idea, isPremium) => {
   if (!idea.titulo || idea.titulo === 'Título no disponible') return false;
   if (!idea.guion || idea.guion === 'Guión no disponible') return false;
-  if (!idea.hashtags || idea.hashtags.length < (isPremium ? 7 : 5)) return false;
-  if (!idea.sugerenciasProduccion || idea.sugerenciasProduccion.length < (isPremium ? 4 : 2)) return false;
-  if (isPremium && (!idea.ideasAdicionales || idea.ideasAdicionales.length < 2)) return false;
+  
+  // Ajustamos los requisitos para usuarios no premium
+  if (!isPremium) {
+    if (!idea.hashtags || idea.hashtags.length < 3) return false; // Reducimos a 3 hashtags mínimo
+    if (!idea.sugerenciasProduccion || idea.sugerenciasProduccion.length < 1) return false; // Reducimos a 1 sugerencia mínima
+  } else {
+    // Mantenemos los requisitos más altos para usuarios premium
+    if (!idea.hashtags || idea.hashtags.length < 7) return false;
+    if (!idea.sugerenciasProduccion || idea.sugerenciasProduccion.length < 4) return false;
+    if (!idea.ideasAdicionales || idea.ideasAdicionales.length < 2) return false;
+  }
+  
   return true;
 };
