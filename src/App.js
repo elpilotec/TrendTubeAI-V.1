@@ -37,16 +37,19 @@ function App() {
 
   const checkUserPremiumStatus = async (userId) => {
     try {
-      const response = await fetch(`${API_URL}/api/check-subscription-status?userId=${userId}`);
+      const response = await fetch(`${API_URL}/api/check-subscription-status?userId=${userId}`, {
+        method: 'GET',
+        credentials: 'include', // Añade esta línea
+      });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Network response was not ok');
       }
       const data = await response.json();
       setIsPremium(data.isActive);
       return data.isActive;
     } catch (error) {
       console.error('Error al verificar el estado de la suscripción:', error);
-      return false;
+      throw error;
     }
   };
 

@@ -12,6 +12,7 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
 const StyledToolbar = styled(Toolbar)({
   display: 'flex',
   justifyContent: 'space-between',
+  padding: '0 16px', // Reduce el padding horizontal
 });
 
 const LogoContainer = styled(Link)({
@@ -19,11 +20,18 @@ const LogoContainer = styled(Link)({
   alignItems: 'center',
   textDecoration: 'none',
   color: 'inherit',
+  marginRight: 'auto', // Empuja el contenido siguiente hacia la derecha
 });
 
 const Logo = styled('img')({
-  height: '50px',
-  marginRight: '10px',
+  height: '50px', // Ajustado para que coincida mejor con el texto
+  marginRight: '1', // Eliminado el margen derecho
+});
+
+const BrandText = styled(Typography)({
+  fontWeight: 'bold',
+  marginLeft: '-5px', // Ajusta este valor para pegar más el texto al logo
+  fontSize: '1.5rem', // Ajusta el tamaño de la fuente según sea necesario
 });
 
 const SettingsContainer = styled(Box)({
@@ -57,9 +65,9 @@ export default function Header({ darkMode, toggleDarkMode, user, onLogout, isPre
       <StyledToolbar>
         <LogoContainer to="/">
           <Logo src={logo} alt="TrendTube AI Logo" />
-          <Typography variant="h6" component="div">
+          <BrandText variant="h5" component="div">
             TrendTube AI
-          </Typography>
+          </BrandText>
         </LogoContainer>
         <SettingsContainer>
           {isMobile ? (

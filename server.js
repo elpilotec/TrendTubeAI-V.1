@@ -8,12 +8,11 @@ const SavedIdea = require('./server/savedIdeaModel');
 
 const app = express();
 
-// Configura CORS para permitir solicitudes desde tu dominio frontend
+// Configura CORS
 app.use(cors({
-  origin: ['https://www.trendtubeai.com', 'http://localhost:3000', 'http://localhost:3002'],
-  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  origin: 'http://localhost:3000', // Reemplaza esto con el origen de tu aplicación en producción
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Habilitar pre-flight en todas las rutas
