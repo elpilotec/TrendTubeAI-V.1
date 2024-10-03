@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, Paper, Box, CircularProgress, 
-  Container, IconButton, Button
+  Container, IconButton, Divider, Chip, Tooltip
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 
 export default function SavedIdeas({ user }) {
   const [savedIdeas, setSavedIdeas] = useState([]);
@@ -46,60 +47,49 @@ export default function SavedIdeas({ user }) {
     }
   };
 
-  const handleSaveIdea = async (idea) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/save-idea`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          idea: idea,
-          videoId: idea.videoId
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Idea saved successfully:', result);
-      // Podrías actualizar el estado aquí si es necesario
-    } catch (error) {
-      console.error("Error saving idea:", error);
-      setError("No se pudo guardar la idea");
-    }
-  };
-
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography color="error">{error}</Typography>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
   }
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" gutterBottom>Ideas Guardadas</Typography>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <BookmarkIcon sx={{ mr: 1 }} /> Ideas Guardadas
+      </Typography>
       {savedIdeas.length === 0 ? (
-        <Typography>No tienes ideas guardadas aún.</Typography>
+        <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
+          <Typography>No tienes ideas guardadas aún.</Typography>
+        </Paper>
       ) : (
         savedIdeas.map((idea) => (
-          <Paper key={idea._id} elevation={3} sx={{ mb: 2, p: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6">{idea.titulo}</Typography>
-              <Box>
-                <IconButton onClick={() => handleDeleteIdea(idea._id)}>
+          <Paper key={idea._id} elevation={3} sx={{ mb: 3, p: 3, borderRadius: 2 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{idea.titulo}</Typography>
+              <Tooltip title="Eliminar idea">
+                <IconButton onClick={() => handleDeleteIdea(idea._id)} color="error">
                   <DeleteIcon />
                 </IconButton>
-                <Button onClick={() => handleSaveIdea(idea)}>Guardar de nuevo</Button>
-              </Box>
+              </Tooltip>
             </Box>
-            <Typography variant="body1">{idea.guion}</Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>Hashtags: {idea.hashtags.join(', ')}</Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Typography variant="body1" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{idea.guion}</Typography>
+            <Box sx={{ mt: 2 }}>
+              {idea.hashtags.map((tag, index) => (
+                <Chip key={index} label={tag} sx={{ mr: 1, mb: 1 }} />
+              ))}
+            </Box>
           </Paper>
         ))
       )}
