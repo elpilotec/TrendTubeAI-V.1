@@ -35,15 +35,6 @@ function App() {
 
   const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-if (!googleClientId) {
-  return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <Alert severity="error">
-        El ID de cliente de Google no está configurado. Por favor, verifica tus variables de entorno.
-      </Alert>
-    </Box>
-  );
-}
   const checkUserPremiumStatus = async (userId) => {
     try {
       const response = await fetch(`${API_URL}/api/check-subscription-status?userId=${userId}`, {
