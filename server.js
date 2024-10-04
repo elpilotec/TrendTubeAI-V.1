@@ -1,4 +1,4 @@
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'production'}` });
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -6,16 +6,14 @@ const connectDB = require('./server/db');
 const Subscription = require('./server/subscriptionModel');
 const SavedIdea = require('./server/savedIdeaModel');
 const UserCredit = require('./server/userCreditModel');
-const path = require('path');
 
 const app = express();
 
 // Configura CORS
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3002', 'https://www.trendtubeai.com'],
+  origin: ['http://localhost:3000', 'http://localhost:3002'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Habilitar pre-flight en todas las rutas
@@ -30,7 +28,7 @@ app.use(express.json());
 
 // Middleware para manejar errores generales
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin||'https://www.trendtubeai.com');
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -199,14 +197,13 @@ const startServer = (port) => {
   });
 };
 
-const PORT = process.env.PORT || 0; // 0 hará que Node.js elija un puerto disponible
-
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en el puerto ${PORT}`);
   console.log('Modo:', process.env.NODE_ENV);
   console.log('URL del frontend:', process.env.FRONTEND_URL);
   console.log('URL de la API:', process.env.REACT_APP_API_URL);
-  console.log('MongoDB URI:', process.env.MONGO_URI);
+  console.log(`Modo: ${process.env.NODE_ENV}`);
 });
 
 // Endpoint para verificar el estado de la suscripción
@@ -278,11 +275,3 @@ app.post('/api/confirm-subscription', async (req, res) => {
     // ... resto del código ...
   }
 });
-
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-  });
-}
