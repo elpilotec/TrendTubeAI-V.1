@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const apiKey = process.env.REACT_APP_YOUTUBE_API_KEY;
+console.log('YouTube API Key:', apiKey);
 
 export const fetchVideoDetails = async (videoId) => {
   try {
@@ -11,6 +12,8 @@ export const fetchVideoDetails = async (videoId) => {
         key: apiKey,
       },
     });
+
+    console.log('API Response:', response);
 
     if (response.data && response.data.items.length > 0) {
       const videoData = response.data.items[0].snippet;
