@@ -6,6 +6,7 @@ const connectDB = require('./server/db');
 const Subscription = require('./server/subscriptionModel');
 const SavedIdea = require('./server/savedIdeaModel');
 const UserCredit = require('./server/userCreditModel');
+const path = require('path');
 
 const app = express();
 
@@ -277,3 +278,11 @@ app.post('/api/confirm-subscription', async (req, res) => {
     // ... resto del código ...
   }
 });
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'build')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  });
+}
