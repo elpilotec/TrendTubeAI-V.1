@@ -5,8 +5,8 @@ node_modules/
 build/
 
 # Environment variables
-.env
-
+.env.development
+.env.production
 # Certificados y claves
 ca.crt
 ca.key
