@@ -1,7 +1,7 @@
-require('dotenv').config();
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.REACT_APP_STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const connectDB = require('./server/db');
 const Subscription = require('./server/subscriptionModel');
 const SavedIdea = require('./server/savedIdeaModel');
@@ -11,10 +11,10 @@ const app = express();
 
 // Configura CORS
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3002','https://www.trendtubeai.com'],
+  origin: ['http://localhost:3000', 'http://localhost:3002', 'https://www.trendtubeai.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // Esto permitirá que las cookies se envíen correctamente entre dominios
+  credentials: true
 }));
 
 // Habilitar pre-flight en todas las rutas
@@ -204,7 +204,7 @@ app.listen(PORT, () => {
   console.log('Modo:', process.env.NODE_ENV);
   console.log('URL del frontend:', process.env.FRONTEND_URL);
   console.log('URL de la API:', process.env.REACT_APP_API_URL);
-  console.log(`Modo: ${process.env.NODE_ENV}`);
+  console.log('MongoDB URI:', process.env.MONGO_URI);
 });
 
 // Endpoint para verificar el estado de la suscripción
