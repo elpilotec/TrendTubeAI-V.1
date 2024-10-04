@@ -1,4 +1,4 @@
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'production'}` });
 const express = require('express');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -198,7 +198,8 @@ const startServer = (port) => {
   });
 };
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 0; // 0 hará que Node.js elija un puerto disponible
+
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en el puerto ${PORT}`);
   console.log('Modo:', process.env.NODE_ENV);

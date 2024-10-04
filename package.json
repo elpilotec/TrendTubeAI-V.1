@@ -41,7 +41,8 @@
     "eject": "react-scripts eject",
     "server": "node server.js",
     "dev": "concurrently \"npm run start\" \"npm run server\"",
-    "postinstall": "npm run build"
+    "postinstall": "npm run build",
+    "start:prod": "cross-env NODE_ENV=production PORT=3002 node server.js"
   },
   "eslintConfig": {
     "extends": [
