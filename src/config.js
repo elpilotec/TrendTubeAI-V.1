@@ -1,6 +1,10 @@
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://www.trendtubeai.com'  // URL para producción
-  : 'http://localhost:3001';           // URL para desarrollo
+// Elimina esta línea, ya que las variables de entorno se cargan en server.js
+// require('dotenv').config();
 
-export default API_URL;
+module.exports = {
+  MONGODB_URI: process.env.MONGODB_URI,
+  NODE_ENV: process.env.NODE_ENV,
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL
+};
 

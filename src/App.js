@@ -16,7 +16,9 @@ import StripePayment from './components/StripePayment';
 import { lightTheme, darkTheme } from './theme';
 import { Alert, Snackbar, CircularProgress } from '@mui/material';
 import SavedIdeas from './components/SavedIdeas';
-import API_URL from './config';
+
+// eslint-disable-next-line no-unused-vars
+const API_URL = process.env.REACT_APP_API_URL;
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
@@ -35,33 +37,17 @@ function App() {
 
   const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-const checkUserPremiumStatus = async (userId) => {
-  console.log('Iniciando verificación del estado de suscripción para el usuario:', userId);
-  try {
-    const response = await fetch(`${API_URL}/api/check-subscription-status?userId=${userId}`, {
-      method: 'GET',
-      credentials: 'include', // Añade esta línea
-    });
-
-    console.log('Respuesta de la API recibida:', response);
-
-    if (!response.ok) {
-      console.error('La respuesta de la red no fue satisfactoria:', response.statusText);
-      throw new Error('Network response was not ok');
+  const checkUserPremiumStatus = async (userId) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/check-subscription-status?userId=${userId}`);
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+      setIsPremium(data.isPremium);
+    } catch (error) {
+      console.error('Error al verificar el estado de la suscripción:', error);
+      throw error;
     }
-
-    const data = await response.json();
-    console.log('Datos recibidos de la API:', data);
-
-    setIsPremium(data.isActive);
-    console.log('Estado de suscripción actualizado a:', data.isActive);
-
-    return data.isActive;
-  } catch (error) {
-    console.error('Error al verificar el estado de la suscripción:', error);
-    throw error;
-  }
-};
+  };
 
   const upgradeToPremium = async (userId) => {
     try {

@@ -1,19 +1,40 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+const path = require('path');
+const dotenv = require('dotenv');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const connectDB = require('./server/db');
-const Subscription = require('./server/subscriptionModel');
-const SavedIdea = require('./server/savedIdeaModel');
-const UserCredit = require('./server/userCreditModel');
+
+// Determina qué archivo .env cargar basado en NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+dotenv.config({ path: path.resolve(__dirname, envFile) });
+
+console.log('Entorno:', process.env.NODE_ENV);
+console.debug('MONGODB_URI:', process.env.MONGODB_URI);
+console.debug('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.debug('API_URL:', process.env.API_URL);
+
+console.log('Iniciando servidor...');
+const express = require('express');
+const cors = require('cors');  // Añade esta línea
+const connectDB = require('./models/db');
+const SavedIdea = require('./models/savedIdeaModel');
+const UserCredit = require('./models/userCreditModel');
+const Subscription = require('./models/subscriptionModel');
+// Elimina la línea que importa './models'
+
+connectDB();
 
 const app = express();
+const PORT = process.env.PORT || 3001;
 
-// Configura CORS
+console.log('Variables de entorno cargadas:');
+console.debug('MONGODB_URI:', process.env.MONGODB_URI);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.debug('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.debug('API_URL:', process.env.API_URL);
+
+// Configuración de CORS
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3002'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
 }));
 
 // Habilitar pre-flight en todas las rutas
@@ -32,6 +53,12 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
+
+// Middleware para depurar
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
   next();
 });
 
@@ -102,7 +129,15 @@ app.post('/api/confirm-subscription', async (req, res) => {
       });
 
       await subscription.save();
-      res.json({ success: true, message: 'Suscripción anual confirmada' });
+
+      // Actualizar el estado premium del usuario
+      await UserCredit.findOneAndUpdate(
+        { userId },
+        { isPremium: true },
+        { upsert: true, new: true }
+      );
+
+      res.json({ success: true, message: 'Suscripción anual confirmada y estado premium actualizado' });
     } else {
       res.status(400).json({ error: 'El pago no se ha completado correctamente' });
     }
@@ -112,27 +147,35 @@ app.post('/api/confirm-subscription', async (req, res) => {
 });
 
 // Endpoint para verificar la suscripción del usuario
-app.get('/api/check-subscription/:userId', async (req, res) => {
+app.get('/api/check-subscription-status', async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.query;
     if (!userId) {
-      return res.status(400).json({ error: 'Se requiere un ID de usuario válido' });
+      return res.status(400).json({ error: 'Se requiere un ID de usuario' });
+    }
+
+    const userCredit = await UserCredit.findOne({ userId });
+    if (!userCredit) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
     const subscription = await Subscription.findOne({ userId, status: 'active' });
+    const isPremium = userCredit.isPremium || (subscription && new Date() < subscription.endDate);
 
-    if (subscription && subscription.endDate > new Date()) {
+    if (isPremium) {
       res.json({ 
-        isActive: true, 
-        endDate: subscription.endDate,
-        subscriptionType: subscription.subscriptionType,
-        daysRemaining: Math.ceil((subscription.endDate - new Date()) / (1000 * 60 * 60 * 24)) // Calculamos días restantes
+        isPremium: true,
+        isActive: true,
+        endDate: subscription ? subscription.endDate : null,
+        subscriptionType: subscription ? subscription.subscriptionType : 'lifetime',
+        daysRemaining: subscription ? Math.ceil((subscription.endDate - new Date()) / (1000 * 60 * 60 * 24)) : 'unlimited'
       });
     } else {
-      res.json({ isActive: false, message: 'No hay suscripción activa o ha caducado' });
+      res.json({ isPremium: false, isActive: false, message: 'No hay suscripción activa' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor al verificar la suscripción' });
+    console.error('Error al verificar el estado de la suscripción:', error);
+    res.status(500).json({ error: 'Error al verificar el estado de la suscripción' });
   }
 });
 
@@ -140,13 +183,17 @@ app.get('/api/check-subscription/:userId', async (req, res) => {
 app.post('/api/save-idea', async (req, res) => {
   console.log('Received save idea request:', req.body);
   try {
-    const { userId, idea, videoId } = req.body;
-    const savedIdea = new SavedIdea({
+    const { userId, videoId, titulo, guion, hashtags, sugerenciasProduccion, ideasAdicionales } = req.body;
+    const newIdea = new SavedIdea({
       userId,
       videoId,
-      ...idea
+      titulo,
+      guion,
+      hashtags,
+      sugerenciasProduccion,
+      ideasAdicionales
     });
-    await savedIdea.save();
+    await newIdea.save();
     console.log('Idea saved successfully');
     res.json({ success: true, message: 'Idea guardada con éxito' });
   } catch (error) {
@@ -187,6 +234,10 @@ app.use((err, req, res, next) => {
 const startServer = (port) => {
   app.listen(port, () => {
     console.log(`Servidor ejecutándose en el puerto ${port}`);
+    console.debug('MongoDB URI:', process.env.MONGODB_URI);
+    console.log('Modo:', process.env.NODE_ENV);
+    console.log('URL del frontend:', process.env.FRONTEND_URL);
+    console.log('URL de la API:', process.env.API_URL);
   }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       console.log(`Puerto ${port} está en uso, intentando con el siguiente...`);
@@ -197,41 +248,7 @@ const startServer = (port) => {
   });
 };
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en el puerto ${PORT}`);
-  console.log('Modo:', process.env.NODE_ENV);
-  console.log('URL del frontend:', process.env.FRONTEND_URL);
-  console.log('URL de la API:', process.env.REACT_APP_API_URL);
-  console.log(`Modo: ${process.env.NODE_ENV}`);
-});
-
-// Endpoint para verificar el estado de la suscripción
-app.get('/api/check-subscription-status', async (req, res) => {
-  try {
-    const { userId } = req.query;
-    console.log('Verificando suscripción para userId:', userId);
-
-    if (!userId) {
-      console.log('Error: userId no proporcionado');
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    const subscription = await Subscription.findOne({ userId, status: 'active' });
-    console.log('Suscripción encontrada:', subscription);
-
-    if (subscription && subscription.endDate > new Date()) {
-      console.log('Suscripción activa encontrada');
-      res.json({ isActive: true });
-    } else {
-      console.log('No se encontró suscripción activa');
-      res.json({ isActive: false });
-    }
-  } catch (error) {
-    console.error('Error al verificar el estado de la suscripción:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
-  }
-});
+startServer(PORT);
 
 // Añadir este endpoint para verificar y actualizar créditos
 app.post('/api/check-credits', async (req, res) => {
@@ -258,20 +275,11 @@ app.post('/api/check-credits', async (req, res) => {
   }
 });
 
-// Modificar el endpoint de confirm-subscription para actualizar a premium
-app.post('/api/confirm-subscription', async (req, res) => {
-  // ... código existente ...
-
-  if (paymentIntent.status === 'succeeded') {
-    // ... código existente ...
-
-    // Actualizar el estado premium del usuario
-    await UserCredit.findOneAndUpdate(
-      { userId },
-      { isPremium: true },
-      { upsert: true, new: true }
-    );
-
-    // ... resto del código ...
-  }
-});
+// Servir archivos estáticos en producción
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'build')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  });
+}
